@@ -127,7 +127,7 @@ elif st.session_state.select_reproductive_status==rep_status_types[2] and st.ses
 @st.cache_data(show_spinner=False)
 def load_data():
     food = pd.read_csv("dog_food_Hills_Pet_Nutrition.csv")
-    disease = pd.read_csv("dog_breed_diseases.csv")
+    disease = pd.read_csv("Disease.csv")
     return food, disease
 
 pet_food_df, disease_df = load_data()
@@ -135,20 +135,19 @@ pet_food_df, disease_df = load_data()
 df_standart = pd.read_csv("ingredient_standardization.csv")
 ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
 
-merged_df = df_standart.merge(
+df_standart = df_standart.merge(
     ingredirents_df,
     on=['Category', 'Description'],
     how='inner'
 )
-merged_df = merged_df.set_index("Ingredient")
+df_standart = merged_df.set_index("Ingredient")
 
-proteins=df_standart[df_standart["Type"].isin(["Яйца и Молочные продукты", "Мясо"])]["Ingredient"].tolist()
-oils=df_standart[df_standart["Type"].isin([ "Масло и жир"])]["Ingredient"].tolist()
-carbonates_cer=df_standart[df_standart["Type"].isin(["Крупы"])]["Ingredient"].tolist()
-carbonates_veg=df_standart[df_standart["Type"].isin(["Зелень и специи","Овощи и фрукты"])]["Ingredient"].tolist()
-other=df_standart[df_standart["Type"].isin(["Вода, соль и сахар"])]["Ingredient"].tolist()
-water=["Вода — Обыкновенный"]
-dele = df_standart[df_standart["Standart"].isna()]["Ingredient"].tolist()
+proteins=df_standart[df_standart["Категория"].isin(["Мясо","Яйца и Молочные продукты"])]["Ingredient"].tolist()
+oils=df_standart[df_standart["Категория"].isin([ "Масло и жир"])]["Ingredient"].tolist()
+carbonates_cer=df_standart[df_standart["Категория"].isin(["Крупы"])]["Ingredient"].tolist()
+carbonates_veg=df_standart[df_standart["Категория"].isin(["Зелень и специи","Овощи и фрукты"])]["Ingredient"].tolist()
+other=df_standart[df_standart["Категория"].isin(["Вода, соль и сахар"])]["Ingredient"].tolist()
+water=["water"]
 
 stop_words=["Beta-Carotene","With Natural Antioxidant", "Minerals","Digest","Dicalcium Phosphate","L-Carnitine","L-Threonine","Composition:","L-Tryptophan","Chicken Flavor","Manganese Sulfate"
 "Hydrolyzed Chicken Flavor", "Monosodium Phosphate","Magnesium Oxide","Powdered Cellulose","Taurine","Mixed Tocopherols For Freshness","Natural Flavor","Potassium Alginate","Sodium Tripolyphosphate",
@@ -159,11 +158,8 @@ stop_words=["Beta-Carotene","With Natural Antioxidant", "Minerals","Digest","Dic
 "Manganese Sulfate","Caramel Color","Citric Acid For Freshness","Brewers Dried Yeast","Soybean Mill Run","Glucosamine Hydrochloride","Vitamin A Supplement","Pork Plasma","Pork Gelatin"]
 
 
-
-# Инициализируем состояния
 if "step" not in st.session_state:
     st.session_state.step = 0  # 0 — начальное, 1 — после генерации, 2 — после расчета
-
 
 def classify_breed_size(row):
     w = (row["min_weight"] + row["max_weight"]) / 2
@@ -182,38 +178,6 @@ def preprocess_disease(df):
 
 disease_df = preprocess_disease(disease_df)
 
-@st.cache_data(show_spinner=False)
-def preprocess_food(df):
-    df = df.copy()
-    nutrients = [
-        "protein", "fat", "carbohydrate (nfe)", "crude fibre", "calcium",
-        "phospohorus", "potassium", "sodium", "magnesium", "vitamin e",
-        "vitamin c", "omega-3-fatty acids", "omega-6-fatty acids",
-    ]
-    for col in nutrients:
-        df[col] = (
-            df[col]
-            .astype(str)
-            .str.replace("%", "")
-            .str.replace("IU/kg", "")
-            .str.extract(r"([\d\.]+)")
-            .astype(float)
-            .fillna(0.0)
-        )
-
-    df["combined_text"] = (
-        df["ingredients"].fillna("")
-        .str.cat(df["key benefits"].fillna(""), sep=" ", na_rep="")
-        .str.cat(df["product title"].fillna(""), sep=" ", na_rep="")
-        .str.cat(df["product description"].fillna(""), sep=" ", na_rep="")
-        .str.cat(df["helpful tips"].fillna(""), sep=" ", na_rep="")
-        .str.cat(df["need/preference"].fillna(""), sep=" ", na_rep="")
-        .str.cat(df["alternate product recommendation"].fillna(""), sep=" ", na_rep="")
-    )
-    return df
-
-food_df = preprocess_food(food_df)
-
 # -----------------------------------
 # 4) TEXT VECTORIZATION & SVD
 # -----------------------------------
@@ -228,7 +192,7 @@ def build_text_pipeline(corpus, n_components=100):
 
     return vect, svd, X_reduced
 
-vectorizer, svd, X_text_reduced = build_text_pipeline(food_df["combined_text"], n_components=100)
+vectorizer, svd, X_text_reduced = build_text_pipeline(food_df["combination_clean"], n_components=100)
 
 # -----------------------------------
 # 5) CATEGORICAL ENCODING
@@ -237,7 +201,7 @@ vectorizer, svd, X_text_reduced = build_text_pipeline(food_df["combined_text"], 
 @st.cache_resource(show_spinner=False)
 def build_categorical_encoder(df):
     enc = OneHotEncoder(sparse_output=True, handle_unknown="ignore")
-    cats = df[["breed size", "lifestage"]].fillna("Unknown")
+    cats = df[["breed_size", "life_stage"]].fillna("Unknown")
     enc.fit(cats)
     return enc, enc.transform(cats)
 
@@ -256,59 +220,6 @@ def combine_features(text_reduced, _cat_matrix):
 X_combined = combine_features(X_text_reduced, X_categorical)
 
 # -----------------------------------
-# 7) TRAIN RIDGE REGRESSORS FOR NUTRIENTS
-# -----------------------------------
-
-@st.cache_resource(show_spinner=False)
-def train_nutrient_models(food, _X):
-    nutrient_models = {}
-    scalers = {}
-
-    nutrients = [
-        "protein", "fat", "carbohydrate (nfe)", "crude fibre", "calcium",
-        "phospohorus", "potassium", "sodium", "magnesium", "vitamin e",
-        "vitamin c", "omega-3-fatty acids", "omega-6-fatty acids",
-    ]
-    to_scale = {
-        "sodium",
-        "omega-3-fatty acids",
-        "omega-6-fatty acids",
-        "calcium",
-        "phospohorus",
-        "potassium",
-        "magnesium",
-    }
-
-    for nutrient in nutrients:
-        y = food[nutrient].fillna(food[nutrient].median()).values.reshape(-1, 1)
-        if nutrient in to_scale:
-            scaler = StandardScaler()
-            y_scaled = scaler.fit_transform(y).ravel()
-        else:
-            scaler = None
-            y_scaled = y.ravel()
-
-        X_train, _, y_train, _ = train_test_split(_X, y_scaled, test_size=0.2, random_state=42)
-
-        base = Ridge()
-        search = GridSearchCV(
-            base,
-            param_grid={"alpha": [0.1, 1.0]},
-            scoring="r2",
-            cv=2,
-            n_jobs=-1,
-        )
-        search.fit(X_train, y_train)
-
-        nutrient_models[nutrient] = search.best_estimator_
-        scalers[nutrient] = scaler
-
-    return nutrient_models, scalers
-
-# **This line must run at import-time** so ridge_models is defined before you use it below:
-ridge_models, scalers = train_nutrient_models(food_df, X_combined)
-
-# -----------------------------------
 # 8) TRAIN RIDGE CLASSIFIERS FOR INGREDIENT PRESENCE
 # -----------------------------------
 
@@ -316,8 +227,7 @@ ridge_models, scalers = train_nutrient_models(food_df, X_combined)
 def train_ingredient_models(food, _X):
     all_ings = []
     for txt in food["ingredients"].dropna():
-        tokens = [i.strip().lower() for i in txt.split(",")]
-        all_ings.extend(tokens)
+        all_ings.extend(txt)
 
     counts = Counter(all_ings)
     frequent = [ing for ing, cnt in counts.items() if cnt >= 5]
@@ -343,15 +253,15 @@ ingredient_models, frequent_ingredients = train_ingredient_models(food_df, X_com
 # -----------------------------------
 
 disorder_keywords = {
-    "Inherited musculoskeletal disorders": "joint mobility glucosamine arthritis cartilage flexibility",
-    "Inherited gastrointestinal disorders": "digest stomach bowel sensitive diarrhea gut ibs",
+    "Inherited musculoskeletal disorders": "muscle joint bone cartilage jd joint mobility glucosamine arthritis cartilage flexibility",
+    "Inherited gastrointestinal disorders": "digestive digestion stool food sensitivity hypoallergenic stomach digest stomach bowel sensitive diarrhea gut ibs",
     "Inherited endocrine disorders": "thyroid metabolism weight diabetes insulin hormone glucose",
     "Inherited eye disorders": "vision eye retina cataract antioxidant sight ocular",
-    "Inherited nervous system disorders": "brain seizure cognitive nerve neuro neurological cognition",
-    "Inherited cardiovascular disorders": "heart cardiac circulation omega-3 blood pressure vascular",
-    "Inherited skin disorders": "skin allergy itch coat omega-6 dermatitis eczema flaky",
+    "Inherited nervous system disorders": "nervous system stress disrupted sleep brain brain seizure cognitive nerve neuro neurological cognition",
+    "Inherited cardiovascular disorders": "heart hd heart cardiac circulation omega-3 blood pressure vascular",
+    "Inherited skin disorders": "skin coat allergy skin allergy itch coat omega-6 dermatitis eczema flaky",
     "Inherited immune disorders": "immune defense resistance inflammatory autoimmune",
-    "Inherited urinary and reproductive disorders": "urinary bladder kidney renal urine reproductive",
+    "Inherited urinary and reproductive disorders": " urinary bladder stones urinary bladder kidney renal urine reproductive",
     "Inherited respiratory disorders": "breath respiratory airway lung cough breathing nasal",
     "Inherited blood disorders": "anemia blood iron hemoglobin platelets clotting hemophilia",
 }
@@ -378,9 +288,6 @@ if "prev_ingr_ranges" not in st.session_state:
     st.session_state.prev_ingr_ranges = []
 if "prev_nutr_ranges" not in st.session_state:
     st.session_state.prev_nutr_ranges = {}
-
-
-
 
 if "age_sel" not in st.session_state:
     st.session_state.age_sel = None
@@ -476,50 +383,29 @@ if user_breed:
             kw_tfidf = vectorizer.transform([keywords])
             kw_reduced = svd.transform(kw_tfidf)
 
-            # One-hot for (breed_size, "Adult")
-            cat_vec = encoder.transform([[breed_size, "Adult"]])
+            # One-hot for (breed_size, age_type_categ)
+            cat_vec = encoder.transform([[breed_size, age_type_categ]])
             kw_combined = hstack([csr_matrix(kw_reduced), cat_vec])
-
-            # 10.2) Predict nutrients
-            nutrient_preds = {}
-            for nut, model in ridge_models.items():
-                pred = model.predict(kw_combined)[0]
-                sc = scalers.get(nut)
-                if sc:
-                    pred = sc.inverse_transform([[pred]])[0][0]
-                nutrient_preds[nut] = round(pred, 2)
 
             # 10.3) Rank ingredients
             ing_scores = {
                 ing: clf.decision_function(kw_combined)[0]
                 for ing, clf in ingredient_models.items()
             }
-            top_ings = sorted(ing_scores.items(), key=lambda x: x[1], reverse=True)[:20]
+            top_ings = sorted(ing_scores.items(), key=lambda x: x[1], reverse=True)
 
-            prot=sorted([i for i in top_ings if i[0].title() in proteins and i[0].title() not in dele], key=lambda x: x[1], reverse=True)[:1]
-            prot = [i.title() for i, _ in prot]
+            prot=sorted([i[0] for i in top_ings if i[0] in proteins], key=lambda x: x[1], reverse=True)[:1]
             prot=df_standart[df_standart["Ingredient"].isin(prot)]["Standart"].tolist()
 
-            carb_cer=sorted([i for i in top_ings if i[0].title() in carbonates_cer and i[0].title() not in dele], key=lambda x: x[1], reverse=True)[:1]
-            carb_cer = [i.title() for i, _ in carb_cer]
+            carb_cer=sorted([i[0] for i in top_ings if i[0] in carbonates_cer ], key=lambda x: x[1], reverse=True)[:1]
             carb_cer=df_standart[df_standart["Ingredient"].isin(carb_cer)]["Standart"].tolist()
 
-            carb_veg=sorted([i for i in top_ings if i[0].title() in carbonates_veg and i[0].title() not in dele], key=lambda x: x[1], reverse=True)[:1]
-            carb_veg = [i.title() for i, _ in carb_veg]
+            carb_veg=sorted([i[0] for i in top_ings if i[0] in carbonates_veg], key=lambda x: x[1], reverse=True)[:1]
             carb_veg=df_standart[df_standart["Ingredient"].isin(carb_veg)]["Standart"].tolist()
 
-
-            fat=sorted([i for i in top_ings if i[0].title() in oils and i[0].title() not in dele], key=lambda x: x[1], reverse=True)[:1]
-            fat = [i.title() for i, _ in fat]
+            fat=sorted([i[0] for i in top_ings if i[0] in oils], key=lambda x: x[1], reverse=True)[:1]
             fat=df_standart[df_standart["Ingredient"].isin(fat)]["Standart"].tolist()
-
-            oth=sorted([i for i in top_ings[:20] if i[0].title() in other and i[0].title() not in dele], key=lambda x: x[1], reverse=True)[:1]
-            if len(oth)>0:
-              oth = [i.title() for i, _ in oth]
-              oth=df_standart[df_standart["Ingredient"].isin(oth)]["Standart"].tolist()
-            else:
-              oth=[]
-            
+                      
             ingredients_finish = [i for i in list(set(prot))+list(set(carb_cer+carb_veg+fat))+list(set(oth+water)) if len(i)>0]
                      
             # 10.5) Display
