@@ -130,7 +130,7 @@ def load_data():
     disease = pd.read_csv("Disease.csv")
     return food, disease
 
-pet_food_df, disease_df = load_data()
+food_df, disease_df = load_data()
 
 df_standart = pd.read_csv("ingredient_standardization.csv")
 ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
