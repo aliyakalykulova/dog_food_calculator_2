@@ -408,7 +408,7 @@ if user_breed:
             fat=sorted([i[0] for i in top_ings if i[0] in oils], key=lambda x: x[1], reverse=True)[:1]
             fat=df_standart[df_standart["Ingredient"].isin(fat)]["Standart"].tolist()
                       
-            ingredients_finish = [i for i in list(set(prot))+list(set(carb_cer+carb_veg+fat))+list(set(oth+water)) if len(i)>0]
+            ingredients_finish = [i for i in list(set(prot))+list(set(carb_cer+carb_veg+fat))+list(set(water)) if len(i)>0]
                      
             # 10.5) Display
             st.subheader("🌿 Рекомендуемые ингредиенты")
