@@ -249,7 +249,7 @@ def train_ingredient_models(food, _X):
 
 # **This line must run at import-time** so ingredient_models is defined before you use it below:
 ingredient_models, frequent_ingredients = train_ingredient_models(food_df, X_combined)
-st.write(food_df["ingredients"])
+st.write(food_df["ingredients"][0][0])
 # -----------------------------------
 # 9) DISORDER KEYWORDS DICTIONARY
 # -----------------------------------
