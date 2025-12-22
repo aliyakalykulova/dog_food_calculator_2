@@ -229,7 +229,8 @@ X_combined = combine_features(X_text_reduced, X_categorical)
 def train_ingredient_models(food, _X):
     all_ings = []
     for txt in food["ingredients"].dropna():
-        all_ings.extend(txt)
+        tokens=txt.replace("[","").replace("]","").replace("'","").split(", ")
+        all_ings.extend(tokens)
 
     counts = Counter(all_ings)
     frequent = [ing for ing, cnt in counts.items() if cnt >= 5]
