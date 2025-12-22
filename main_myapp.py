@@ -126,13 +126,22 @@ elif st.session_state.select_reproductive_status==rep_status_types[2] and st.ses
 
 @st.cache_data(show_spinner=False)
 def load_data():
-    food = pd.read_csv("FINAL_COMBINED.csv")
-    disease = pd.read_csv("Disease.csv")
+    food = pd.read_csv("dog_food_Hills_Pet_Nutrition.csv")
+    disease = pd.read_csv("dog_breed_diseases.csv")
     return food, disease
 
-food_df, disease_df = load_data()
+pet_food_df, disease_df = load_data()
 
-df_standart = pd.read_csv("merge_tab.csv")
+df_standart = pd.read_csv("ingredient_standardization.csv")
+ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
+
+merged_df = df_standart.merge(
+    ingredirents_df,
+    on=['Category', 'Description'],
+    how='inner'
+)
+merged_df = merged_df.set_index("Ingredient")
+
 proteins=df_standart[df_standart["Type"].isin(["Яйца и Молочные продукты", "Мясо"])]["Ingredient"].tolist()
 oils=df_standart[df_standart["Type"].isin([ "Масло и жир"])]["Ingredient"].tolist()
 carbonates_cer=df_standart[df_standart["Type"].isin(["Крупы"])]["Ingredient"].tolist()
