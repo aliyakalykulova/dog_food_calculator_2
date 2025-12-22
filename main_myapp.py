@@ -142,6 +142,7 @@ df_standart = df_standart.merge(
     how='inner'
 )
 df_standart = df_standart.set_index("Ingredient_pet_food")
+df_standart = df_standart.rename(columns={'Ingredient_pet_food': 'Ingredient'})
 
 proteins=df_standart[df_standart["Категория"].isin(["Мясо","Яйца и Молочные продукты"])]["Ingredient"].tolist()
 oils=df_standart[df_standart["Категория"].isin([ "Масло и жир"])]["Ingredient"].tolist()
