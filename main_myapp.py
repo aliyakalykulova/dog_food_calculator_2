@@ -134,6 +134,7 @@ pet_food_df, disease_df = load_data()
 
 df_standart = pd.read_csv("ingredient_standardization.csv")
 ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
+df_standart = df_standart.rename(columns={'Ingredient_USDA': 'Description'})
 
 df_standart = df_standart.merge(
     ingredirents_df,
