@@ -544,10 +544,10 @@ if user_breed:
 						  
                           needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)					  
                           st.write(float(results["max"]["moisture"]))
-                          nutr_ranges['Влага'] = st.slider(f"{'Влага'}", 0, 100, (float(results["min"]["moisture"]), float(results["max"]["moisture"])))
-                          nutr_ranges['Белки'] = st.slider(f"{'Белки'}", 0, 100, (float(results["min"]["protein"]), float(results["max"]["protein"])))
-                          nutr_ranges['Углеводы'] = st.slider(f"{'Углеводы'}", 0, 100, (float(results["min"]["carbohydrate (nfe)"]), float(results["max"]["carbohydrate (nfe)"])))
-                          nutr_ranges['Жиры'] = st.slider(f"{'Жиры'}", 0, 100, (float(results["min"]["fat"]), float(results["max"]["fat"])))
+                          nutr_ranges['Влага'] = st.slider(f"{'Влага'}", 0, 100, (int(results["min"]["moisture"]), int(results["max"]["moisture"])))
+                          nutr_ranges['Белки'] = st.slider(f"{'Белки'}", 0, 100, (int(results["min"]["protein"]), int(results["max"]["protein"])))
+                          nutr_ranges['Углеводы'] = st.slider(f"{'Углеводы'}", 0, 100, (int(results["min"]["carbohydrate (nfe)"]), int(results["max"]["carbohydrate (nfe)"])))
+                          nutr_ranges['Жиры'] = st.slider(f"{'Жиры'}", 0, 100, (int(results["min"]["fat"]), int(results["max"]["fat"])))
 
                           if ingr_ranges != st.session_state.prev_ingr_ranges:
                                 st.session_state.show_result_2 = False
