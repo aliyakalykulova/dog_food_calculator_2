@@ -335,11 +335,11 @@ if age_type_categ==age_category_types[2]:
 cols = ["moisture", "protein", "fat", "carbohydrate (nfe)"]
 
 def extract_target_foods(df, func_name, breed_size, lifestage):
-    df_func = df[(df["function"].isin(func_name)) & (df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
+    df_func = df[(df["category"].isin(func_name)) & (df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
     if len(df_func) == 0:
-        df_func = df[(df["function"].isin(func_name)) & (df["life_stage"] == lifestage)]
+        df_func = df[(df["category"].isin(func_name)) & (df["life_stage"] == lifestage)]
     if len(df_func) == 0:
-        df_func = df[df["function"].isin(func_name)]
+        df_func = df[df["category"].isin(func_name)]
     if len(df_func) == 0:
         df_func = df[(df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
     return df_func
