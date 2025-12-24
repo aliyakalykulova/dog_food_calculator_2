@@ -408,7 +408,6 @@ if user_breed:
             fat=sorted([i[0] for i in top_ings if i[0] in oils], key=lambda x: x[1], reverse=True)[:1]
             fat=df_standart[df_standart["Ingredient"].isin(fat)]["Standart"].tolist()
 			
-			st.write(fat)
 			ingredients_finish = [i for i in prot+carb_cer+carb_veg+fat+df_standart[df_standart["Ingredient"].isin(water)]["Standart"].tolist() if len(i)>0]
 			
             st.write(ingredients_finish)
