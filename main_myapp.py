@@ -409,7 +409,7 @@ if user_breed:
             fat=df_standart[df_standart["Ingredient"].isin(fat)]["Standart"].tolist()
                       
             ingredients_finish = [i for i in list(set(prot))+list(set(carb_cer+carb_veg+fat))+list(set(water)) if len(i)>0]
-                     
+            st.write(ingredients_finish)
             # 10.5) Display
             st.subheader("🌿 Рекомендуемые ингредиенты")
             for ing in ingredients_finish:
