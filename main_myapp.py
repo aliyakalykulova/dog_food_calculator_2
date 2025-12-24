@@ -539,7 +539,7 @@ if user_breed:
                           # --- Ограничения по нутриентам ---
                           st.subheader("Ограничения по нутриентам:")
                           nutr_ranges = {}
-						  
+						  st.write(disorder_type)
                           results, maximaze_nutrs = get_conditions_for_function(food_df, transl_dis(disorder_type), transl_size(size_categ), transl_age(age_type_categ))
 						  
                           needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)					  
