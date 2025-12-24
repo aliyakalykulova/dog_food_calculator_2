@@ -97,7 +97,7 @@ def load_data():
     food = pd.read_csv("dog_food_Hills_Pet_Nutrition.csv")
     food["category"]=food["category"].astype(str).str.replace("[", "", regex=False).str.replace("]", "", regex=False).str.replace("'", "", regex=False).str.lower().split(", ")
     disease = pd.read_csv("Disease.csv")
-	disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
+    disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
 
     standart = pd.read_csv("ingredient_standardization.csv")
     ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
