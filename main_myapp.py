@@ -408,7 +408,7 @@ if user_breed:
                 ing: clf.decision_function(kw_combined)[0]
                 for ing, clf in ingredient_models.items()
             }
-			top_ings = sorted(ing_scores.items(), key=lambda x: x[1], reverse=True)
+            top_ings = sorted(ing_scores.items(), key=lambda x: x[1], reverse=True)
 			
             prot=sorted([i[0] for i in top_ings if i[0] in proteins], key=lambda x: x[1], reverse=True)[:1]
             prot=df_standart[df_standart["Ingredient"].isin(prot)]["Standart"].tolist()
