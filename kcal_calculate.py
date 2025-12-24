@@ -23,6 +23,15 @@ major_minerals=["Кальций, мг","Медь, мг","Железо, мг","М
 
 vitamins=[ "Витамин A, мкг","Витамин E, мг","Витамин Д, мкг","Витамин В1 (тиамин), мг","Витамин В2 (Рибофлавин), мг","Витамин В3 (Ниацин), мг","Витамин В6, мг","Витамин В12, мкг"]
 
+def classify_breed_size(row):
+    w = (row["min_weight"] + row["max_weight"]) / 2
+    if w <= 10:
+        return "Small Breed"
+    elif w <= 25:
+        return "Medium Breed"
+    else:
+        return "Large Breed"
+
 
 
 def protein_need_calc(kkal, age_type_categ,  w, reproductive_status, age, age_mesuare_type):
