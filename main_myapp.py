@@ -22,7 +22,7 @@ from kcal_calculate import bar_print
 from kcal_calculate import get_other_nutrient_norms
 from kcal_calculate import show_nutr_content
 from kcal_calculate import protein_need_calc
-
+from kcal_calculate import classify_breed_size
 
 # все спсики-------------------------------------------------------------------------
 
@@ -49,17 +49,131 @@ major_minerals=["Кальций, мг","Медь, мг","Железо, мг","М
 
 vitamins=[ "Витамин A, мкг","Витамин E, мг","Витамин Д, мкг","Витамин В1 (тиамин), мг","Витамин В2 (Рибофлавин), мг","Витамин В3 (Ниацин), мг","Витамин В6, мг","Витамин В12, мкг"]
 
+disorder_keywords = {
+    "Inherited musculoskeletal disorders": "muscle joint bone cartilage jd joint mobility glucosamine arthritis cartilage flexibility",
+    "Inherited gastrointestinal disorders": "digestive digestion stool food sensitivity hypoallergenic stomach digest stomach bowel sensitive diarrhea gut ibs",
+    "Inherited endocrine disorders": "thyroid metabolism weight diabetes insulin hormone glucose",
+    "Inherited eye disorders": "vision eye retina cataract antioxidant sight ocular",
+    "Inherited nervous system disorders": "nervous system stress disrupted sleep brain brain seizure cognitive nerve neuro neurological cognition",
+    "Inherited cardiovascular disorders": "heart hd heart cardiac circulation omega-3 blood pressure vascular",
+    "Inherited skin disorders": "skin coat allergy skin allergy itch coat omega-6 dermatitis eczema flaky",
+    "Inherited immune disorders": "immune defense resistance inflammatory autoimmune",
+    "Inherited urinary and reproductive disorders": " urinary bladder stones urinary bladder kidney renal urine reproductive",
+    "Inherited respiratory disorders": "breath respiratory airway lung cough breathing nasal",
+    "Inherited blood disorders": "anemia blood iron hemoglobin platelets clotting hemophilia",
+}
 
-# -------------------------------------------------------------------------------------
+cols_to_divide = ['Влага', 'Белки', 'Углеводы', 'Жиры']
 
+
+
+# загрузка и подготовка датасетов-------------------------------------------------------------------------------------
+
+@st.cache_data(show_spinner=False)
+def load_data():
+    food = pd.read_csv("dog_food_Hills_Pet_Nutrition.csv")
+    disease = pd.read_csv("Disease.csv")
+	disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
+
+    standart = pd.read_csv("ingredient_standardization.csv")
+    ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
+
+    standart = standart.rename(columns={'Ingredient_USDA': 'Description'})
+    standart = standart.merge(ingredirents_df, on=['Category', 'Description'], how='inner')
+    standart = standart.rename(columns={'Ingredient_pet_food': 'Ingredient'})
+    standart["Standart"] = standart["Ингредиенты"] + " — " + standart["Описание"]
+
+    return food, disease, standart, ingredirents_df
+
+food_df, disease_df, df_standart, ingredirents_df = load_data()
+
+proteins=df_standart[df_standart["Категория"].isin(["Мясо","Яйца и Молочные продукты"])]["Ingredient"].tolist()
+oils=df_standart[df_standart["Категория"].isin([ "Масло и жир"])]["Ingredient"].tolist()
+carbonates_cer=df_standart[df_standart["Категория"].isin(["Крупы"])]["Ingredient"].tolist()
+carbonates_veg=df_standart[df_standart["Категория"].isin(["Зелень и специи","Овощи и фрукты"])]["Ingredient"].tolist()
+water=["water"]
+
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------
+# Расчеты и обучение модели для рекомендации ингредиентов-------------------------------------------------------------------------------------------------
+# -----------------------------------
+# 4) TEXT VECTORIZATION & SVD
+# -----------------------------------
+@st.cache_resource(show_spinner=False)
+def build_text_pipeline(corpus, n_components=100):
+    vect = TfidfVectorizer(stop_words="english", max_features=5000)
+    X_tfidf = vect.fit_transform(corpus)
+    svd = TruncatedSVD(n_components=n_components, random_state=42)
+    X_reduced = svd.fit_transform(X_tfidf)
+    return vect, svd, X_reduced
+
+vectorizer, svd, X_text_reduced = build_text_pipeline(food_df["combination_clean"], n_components=100)
+
+# -----------------------------------
+# 5) CATEGORICAL ENCODING
+# -----------------------------------
+
+@st.cache_resource(show_spinner=False)
+def build_categorical_encoder(df):
+    enc = OneHotEncoder(sparse_output=True, handle_unknown="ignore")
+    cats = df[["breed_size", "life_stage"]].fillna("Unknown")
+    enc.fit(cats)
+    return enc, enc.transform(cats)
+
+encoder, X_categorical = build_categorical_encoder(food_df)
+
+# -----------------------------------
+# 6) COMBINE FEATURES INTO SPARSE MATRIX
+# -----------------------------------
+
+@st.cache_resource(show_spinner=False)
+def combine_features(text_reduced, _cat_matrix):
+    # Turn dense text_reduced into sparse form
+    X_sparse_text = csr_matrix(text_reduced)
+    return hstack([X_sparse_text, _cat_matrix])
+
+X_combined = combine_features(X_text_reduced, X_categorical)
+
+# -----------------------------------
+# 7) TRAIN RIDGE CLASSIFIERS FOR INGREDIENT PRESENCE
+# -----------------------------------
+
+@st.cache_resource(show_spinner=False)
+def train_ingredient_models(food, _X):
+    all_ings = []
+    for txt in food["ingredients"].dropna():
+        tokens=txt.replace("[","").replace("]","").replace("'","").split(", ")
+        all_ings.extend(tokens)
+
+    counts = Counter(all_ings)
+    frequent = [ing for ing, cnt in counts.items() if cnt >= 5]
+
+    targets = {}
+    low = food["ingredients"].fillna("").str.lower()
+    for ing in frequent:
+        targets[ing] = low.apply(lambda s: int(ing in s)).values
+
+    ing_models = {}
+    for ing, y in targets.items():
+        clf = RidgeClassifier()
+        clf.fit(_X, y)
+        ing_models[ing] = clf
+
+    return ing_models, frequent
+
+# **This line must run at import-time** so ingredient_models is defined before you use it below:
+ingredient_models, frequent_ingredients = train_ingredient_models(food_df, X_combined)
+
+
+
+# Кнопки и состояния -----------------------------------------------------------------------------------
+# 1 этап выбор характеристик для собаки --------------------------------------------------------------
 st.set_page_config(page_title="Рекомендации по питанию собак", layout="centered")
 st.header("Рекомендации по питанию собак")
 if "show_result_1" not in st.session_state:
     st.session_state.show_result_1 = False
 if "show_result_2" not in st.session_state:
     st.session_state.show_result_2 = False
-
-
 
 if "select_reproductive_status" not in st.session_state:
     st.session_state.select_reproductive_status = None
@@ -91,7 +205,7 @@ if gender != st.session_state.select_gender:
             st.session_state.show_res_berem_time = False
             st.session_state.show_res_num_pup = False
             st.session_state.show_res_lact_time = False
-              
+
 
 if st.session_state.select_gender == gender_types[1]:
     col1, col2 = st.columns([1, 20])  # col2 будет посередине
@@ -123,155 +237,16 @@ elif st.session_state.select_reproductive_status==rep_status_types[2] and st.ses
                    st.session_state.show_result_2 = False 
               
 
-
-@st.cache_data(show_spinner=False)
-def load_data():
-    food = pd.read_csv("dog_food_Hills_Pet_Nutrition.csv")
-    disease = pd.read_csv("Disease.csv")
-    return food, disease
-
-food_df, disease_df = load_data()
-
-df_standart = pd.read_csv("ingredient_standardization.csv")
-ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
-df_standart = df_standart.rename(columns={'Ingredient_USDA': 'Description'})
-
-df_standart = df_standart.merge(
-    ingredirents_df,
-    on=['Category', 'Description'],
-    how='inner'
-)
-df_standart = df_standart.rename(columns={'Ingredient_pet_food': 'Ingredient'})
-df_standart["Standart"] = df_standart["Ингредиенты"] + " — " + df_standart["Описание"]
-		
-proteins=df_standart[df_standart["Категория"].isin(["Мясо","Яйца и Молочные продукты"])]["Ingredient"].tolist()
-oils=df_standart[df_standart["Категория"].isin([ "Масло и жир"])]["Ingredient"].tolist()
-carbonates_cer=df_standart[df_standart["Категория"].isin(["Крупы"])]["Ingredient"].tolist()
-carbonates_veg=df_standart[df_standart["Категория"].isin(["Зелень и специи","Овощи и фрукты"])]["Ingredient"].tolist()
-other=df_standart[df_standart["Категория"].isin(["Вода, соль и сахар"])]["Ingredient"].tolist()
-water=["water"]
-
-
 if "step" not in st.session_state:
     st.session_state.step = 0  # 0 — начальное, 1 — после генерации, 2 — после расчета
 
-def classify_breed_size(row):
-    w = (row["min_weight"] + row["max_weight"]) / 2
-    if w <= 10:
-        return "Small Breed"
-    elif w <= 25:
-        return "Medium Breed"
-    else:
-        return "Large Breed"
-
-@st.cache_data(show_spinner=False)
-def preprocess_disease(df):
-    df = df.copy()
-    df["breed_size_category"] = df.apply(classify_breed_size, axis=1)
-    return df
-
-disease_df = preprocess_disease(disease_df)
-
 # -----------------------------------
-# 4) TEXT VECTORIZATION & SVD
+# 8) STREAMLIT UI LAYOUT
 # -----------------------------------
-
-@st.cache_resource(show_spinner=False)
-def build_text_pipeline(corpus, n_components=100):
-    vect = TfidfVectorizer(stop_words="english", max_features=5000)
-    X_tfidf = vect.fit_transform(corpus)
-
-    svd = TruncatedSVD(n_components=n_components, random_state=42)
-    X_reduced = svd.fit_transform(X_tfidf)
-
-    return vect, svd, X_reduced
-
-vectorizer, svd, X_text_reduced = build_text_pipeline(food_df["combination_clean"], n_components=100)
-
-# -----------------------------------
-# 5) CATEGORICAL ENCODING
-# -----------------------------------
-
-@st.cache_resource(show_spinner=False)
-def build_categorical_encoder(df):
-    enc = OneHotEncoder(sparse_output=True, handle_unknown="ignore")
-    cats = df[["breed_size", "life_stage"]].fillna("Unknown")
-    enc.fit(cats)
-    return enc, enc.transform(cats)
-
-encoder, X_categorical = build_categorical_encoder(food_df)
-
-# -----------------------------------
-# 6) COMBINE FEATURES INTO SPARSE MATRIX
-# -----------------------------------
-
-@st.cache_resource(show_spinner=False)
-def combine_features(text_reduced, _cat_matrix):
-    # Turn dense text_reduced into sparse form
-    X_sparse_text = csr_matrix(text_reduced)
-    return hstack([X_sparse_text, _cat_matrix])
-
-X_combined = combine_features(X_text_reduced, X_categorical)
-
-# -----------------------------------
-# 8) TRAIN RIDGE CLASSIFIERS FOR INGREDIENT PRESENCE
-# -----------------------------------
-
-@st.cache_resource(show_spinner=False)
-def train_ingredient_models(food, _X):
-    all_ings = []
-    for txt in food["ingredients"].dropna():
-        tokens=txt.replace("[","").replace("]","").replace("'","").split(", ")
-        all_ings.extend(tokens)
-
-    counts = Counter(all_ings)
-    frequent = [ing for ing, cnt in counts.items() if cnt >= 5]
-
-    targets = {}
-    low = food["ingredients"].fillna("").str.lower()
-    for ing in frequent:
-        targets[ing] = low.apply(lambda s: int(ing in s)).values
-
-    ing_models = {}
-    for ing, y in targets.items():
-        clf = RidgeClassifier()
-        clf.fit(_X, y)
-        ing_models[ing] = clf
-
-    return ing_models, frequent
-
-# **This line must run at import-time** so ingredient_models is defined before you use it below:
-ingredient_models, frequent_ingredients = train_ingredient_models(food_df, X_combined)
-# -----------------------------------
-# 9) DISORDER KEYWORDS DICTIONARY
-# -----------------------------------
-
-disorder_keywords = {
-    "Inherited musculoskeletal disorders": "muscle joint bone cartilage jd joint mobility glucosamine arthritis cartilage flexibility",
-    "Inherited gastrointestinal disorders": "digestive digestion stool food sensitivity hypoallergenic stomach digest stomach bowel sensitive diarrhea gut ibs",
-    "Inherited endocrine disorders": "thyroid metabolism weight diabetes insulin hormone glucose",
-    "Inherited eye disorders": "vision eye retina cataract antioxidant sight ocular",
-    "Inherited nervous system disorders": "nervous system stress disrupted sleep brain brain seizure cognitive nerve neuro neurological cognition",
-    "Inherited cardiovascular disorders": "heart hd heart cardiac circulation omega-3 blood pressure vascular",
-    "Inherited skin disorders": "skin coat allergy skin allergy itch coat omega-6 dermatitis eczema flaky",
-    "Inherited immune disorders": "immune defense resistance inflammatory autoimmune",
-    "Inherited urinary and reproductive disorders": " urinary bladder stones urinary bladder kidney renal urine reproductive",
-    "Inherited respiratory disorders": "breath respiratory airway lung cough breathing nasal",
-    "Inherited blood disorders": "anemia blood iron hemoglobin platelets clotting hemophilia",
-}
-
-# -----------------------------------
-# 10) STREAMLIT UI LAYOUT
-# -----------------------------------
-
-#--------------------------------------------------------------------------------------------
-#--------------------------------------------------------------------------------------------------
-
 
 st.sidebar.title("🐶 Smart Dog Diet Advisor")
 st.sidebar.write("Select breed + disorder → get personalized food suggestions")
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/616/616408.png", width=80)
-
 
 if "select1" not in st.session_state:
     st.session_state.select1 = None
@@ -304,7 +279,6 @@ avg_wight=(max_weight[0]+min_weight[0])/2
 size_categ = size_category(avg_wight)
 age_type_categ = age_type_category(size_categ, age ,age_metric)
 
-
 if age!=st.session_state.age_sel or age_metric!=st.session_state.age_metric or weight != st.session_state.weight_sel:
     st.session_state.age_sel=age
     st.session_state.age_metric=age_metric
@@ -332,6 +306,38 @@ if age_type_categ==age_category_types[2]:
         st.session_state.show_result_1 = False
         st.session_state.show_result_2 = False
 
+#------------------------ выбор функции максимизации и нутриентных ограничен
+
+cols = ["moisture", "protein", "fat", "carbohydrate (nfe)"]
+
+def dfff(df, func_name, breed_size, lifestage):
+	df_func=df[df["function"] == func_name, df["breed_size"] in [breed_size,"-"], df["life_stage"] in [lifestage,"-"]]
+    if 	len(df_func)==0:
+		df_func=df[df["function"] == func_name, df["function"]==lifestage]
+	    if 	len(df_func)==0:
+		   df_func=df[df["function"] == func_name]
+		   if 	len(df_func)==0:
+			   df_func=df[df["breed_size"] in [breed_size,"-"], df["life_stage"] in [lifestage,"-"]]
+	return df_func
+
+def get_stats_for_function_w(df, func_name, breed_size, lifestage):
+	df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("function")
+    df_func_w=(df_wet, func_name, breed_size, lifestage)		   
+    result = pd.DataFrame({
+        "min": df_func_w[cols].min(),
+        "max": df_func_w[cols].max()})
+
+    df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("function")
+    df_func_dr=(df_dry, func_name, breed_size, lifestage)		   
+
+    maximize=[i for i in cols if df_func_w[i].mean()>df_wet[i].mean() or df_func_dr[cols].mean()>df_dry[cols].mean()]
+
+    return result,maximize
+
+
+#--------------------------------------------------------------------------------------------
+# 2 этап настройка условий рецепта  ---------------------------------------------------------
+
 if user_breed:
     info = disease_df[disease_df["Breed"] == user_breed]
     if not info.empty:
@@ -353,10 +359,6 @@ if user_breed:
             kcal, formula, page =kcal_calculate(st.session_state.select_reproductive_status, st.session_state.show_res_berem_time, st.session_state.show_res_num_pup ,  st.session_state.show_res_lact_time, 
                                 age_type_categ, st.session_state.weight_sel, avg_wight,  st.session_state.activity_level_sel, user_breed, age)
             
-
-
-            
-            
             st.markdown(f"Было рассчитано по формуле")
             st.latex(formula)
 
@@ -372,7 +374,7 @@ if user_breed:
               
             other_nutrient_norms=get_other_nutrient_norms(st.session_state.kkal_sel, age_type_categ, st.session_state.weight_sel, st.session_state.select_reproductive_status)
                                                           
-            # 10.1) Build query vector
+            # Build query vector
             keywords = disorder_keywords.get(disorder_type, selected_disorder).lower()
             kw_tfidf = vectorizer.transform([keywords])
             kw_reduced = svd.transform(kw_tfidf)
@@ -381,13 +383,13 @@ if user_breed:
             cat_vec = encoder.transform([[breed_size, age_type_categ]])
             kw_combined = hstack([csr_matrix(kw_reduced), cat_vec])
 
-            # 10.3) Rank ingredients
+            # Rank ingredients
             ing_scores = {
                 ing: clf.decision_function(kw_combined)[0]
                 for ing, clf in ingredient_models.items()
             }
-            top_ings = sorted(ing_scores.items(), key=lambda x: x[1], reverse=True)
-
+			top_ings = sorted(ing_scores.items(), key=lambda x: x[1], reverse=True)
+			
             prot=sorted([i[0] for i in top_ings if i[0] in proteins], key=lambda x: x[1], reverse=True)[:1]
             prot=df_standart[df_standart["Ingredient"].isin(prot)]["Standart"].tolist()
 
@@ -402,33 +404,27 @@ if user_breed:
             wat=df_standart[df_standart["Ingredient"].isin(water)]["Standart"].tolist()
             ingredients_finish = [i for i in prot+carb_cer+carb_veg+fat+wat if len(i)>0]
 			
-            # 10.5) Display
+            # Display
             st.subheader("🌿 Рекомендуемые ингредиенты")
             for ing in ingredients_finish:
                 st.write("• " + ing)
-            if len(ingredients_finish)>0:
-               
-                      # --- Загрузка данных ---
-                      df_ingr_all = pd.read_csv('food_ingrediets.csv')
-                      cols_to_divide = ['Влага', 'Белки', 'Углеводы', 'Жиры']
-
-
+            if len(ingredients_finish)>0:               
 
                       for col in cols_to_divide+other_nutrients+major_minerals+vitamins:
                         if col !='ЭПК (50-60%) + ДГК (40-50%), г':
-                          df_ingr_all[col] = df_ingr_all[col].astype(str).str.replace(',', '.', regex=False)
-                          df_ingr_all[col] = pd.to_numeric(df_ingr_all[col], errors='coerce')
+                          ingredirents_df[col] = ingredirents_df[col].astype(str).str.replace(',', '.', regex=False)
+                          ingredirents_df[col] = pd.to_numeric(ingredirents_df[col], errors='coerce')
                         
-                      df_ingr_all['ЭПК (50-60%) + ДГК (40-50%), г'] = df_ingr_all['ЭПК, г']*0.5 + df_ingr_all['ДГК, г']*0.5
-                      df_ingr_all[cols_to_divide+other_nutrients+major_minerals+vitamins] = df_ingr_all[cols_to_divide+other_nutrients+major_minerals+vitamins] / 100
-                      df_ingr_all['ингредиент и описание'] = df_ingr_all['Ингредиенты'] + ' — ' + df_ingr_all['Описание']
+                      ingredirents_df['ЭПК (50-60%) + ДГК (40-50%), г'] = ingredirents_df['ЭПК, г']*0.5 + ingredirents_df['ДГК, г']*0.5
+                      ingredirents_df[cols_to_divide+other_nutrients+major_minerals+vitamins] = ingredirents_df[cols_to_divide+other_nutrients+major_minerals+vitamins] / 100
+                      ingredirents_df['ингредиент и описание'] = ingredirents_df['Ингредиенты'] + ' — ' + ingredirents_df['Описание']
                       
 
-                      proteins=df_ingr_all[df_ingr_all["Категория"].isin(["Яйца и Молочные продукты", "Мясо"])]["ингредиент и описание"].tolist()
-                      oils=df_ingr_all[df_ingr_all["Категория"].isin([ "Масло и жир"])]["ингредиент и описание"].tolist()
-                      carbonates_cer=df_ingr_all[df_ingr_all["Категория"].isin(["Крупы"])]["ингредиент и описание"].tolist()
-                      carbonates_veg=df_ingr_all[df_ingr_all["Категория"].isin(["Зелень и специи","Овощи и фрукты"])]["ингредиент и описание"].tolist()
-                      other=df_ingr_all[df_ingr_all["Категория"].isin(["Вода, соль и сахар"])]["ингредиент и описание"].tolist()
+                      proteins=ingredirents_df[ingredirents_df["Категория"].isin(["Яйца и Молочные продукты", "Мясо"])]["ингредиент и описание"].tolist()
+                      oils=ingredirents_df[ingredirents_df["Категория"].isin([ "Масло и жир"])]["ингредиент и описание"].tolist()
+                      carbonates_cer=ingredirents_df[ingredirents_df["Категория"].isin(["Крупы"])]["ингредиент и описание"].tolist()
+                      carbonates_veg=ingredirents_df[ingredirents_df["Категория"].isin(["Зелень и специи","Овощи и фрукты"])]["ингредиент и описание"].tolist()
+                      other=ingredirents_df[ingredirents_df["Категория"].isin(["Вода, соль и сахар"])]["ингредиент и описание"].tolist()
 
                       meat_len=len(set(proteins).intersection(set(ingredients_finish)))
 
@@ -440,9 +436,9 @@ if user_breed:
                           st.session_state.selected_ingredients = set(ingredients_finish)
 
                       st.title("🍲 Выбор ингредиентов")
-                      for category in df_ingr_all['Категория'].dropna().unique():
+                      for category in ingredirents_df['Категория'].dropna().unique():
                           with st.expander(f"{category}"):
-                              df_cat = df_ingr_all[df_ingr_all['Категория'] == category]
+                              df_cat = ingredirents_df[ingredirents_df['Категория'] == category]
                               for ingredient in df_cat['Ингредиенты'].dropna().unique():
                                   df_ing = df_cat[df_cat['Ингредиенты'] == ingredient]
                                   unique_descs = df_ing['Описание'].dropna().unique()
@@ -469,7 +465,7 @@ if user_breed:
                                                   st.session_state.selected_ingredients.add(label)
                                                   st.session_state.show_result_2 = False
                                   
-                                  # Можно также отобразить "обыкновенные" кнопкой без вложенного expander (по желанию)
+                                  # отобразить "обыкновенные" без вложенного expander
                                   regular_descs = [desc for desc in unique_descs if desc.lower() == "обыкновенный"]
                                   for desc in regular_descs:
                                       label = f"{ingredient} — {desc}"
@@ -495,7 +491,7 @@ if user_breed:
                           st.rerun()
                       # Пример: доступ к выбранным
                       ingredient_names = list(st.session_state.selected_ingredients)
-                      food = df_ingr_all.set_index("ингредиент и описание")[cols_to_divide+other_nutrients+major_minerals+vitamins].to_dict(orient='index')
+                      food = ingredirents_df.set_index("ингредиент и описание")[cols_to_divide+other_nutrients+major_minerals+vitamins].to_dict(orient='index')
 
 
                       # --- Ограничения по количеству каждого ингредиента ---
