@@ -352,7 +352,7 @@ def get_conditions_for_function(df, func_name, breed_size, lifestage):
 		df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("function")
 		df_func_dr=extract_target_foods(df_dry, func_name, breed_size, lifestage)		
 		
-		maximize = [ transl_nutrs(i) for i in cols  if (df_func_w[i].mean() > df_wet[i].mean() or df_func_dr[i].mean() > df_dry[i].mean())]
+		maximize = [ transl_nutrs[i] for i in cols  if (df_func_w[i].mean() > df_wet[i].mean() or df_func_dr[i].mean() > df_dry[i].mean())]
 		return result, maximize
 
 #--------------------------------------------------------------------------------------------
@@ -540,7 +540,7 @@ if user_breed:
                           st.subheader("Ограничения по нутриентам:")
                           nutr_ranges = {}
                           st.write(disorder_type)
-                          results, maximaze_nutrs = get_conditions_for_function(food_df, transl_dis(disorder_type), transl_size(size_categ), transl_age(age_type_categ))
+                          results, maximaze_nutrs = get_conditions_for_function(food_df, transl_dis[disorder_type], transl_size[size_categ], transl_age[age_type_categ])
 						  
                           needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)					  
                           
