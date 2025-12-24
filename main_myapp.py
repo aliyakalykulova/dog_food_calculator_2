@@ -539,11 +539,9 @@ if user_breed:
                           # --- Ограничения по нутриентам ---
                           st.subheader("Ограничения по нутриентам:")
                           nutr_ranges = {}
-                          st.write(size_categ)
                           results, maximaze_nutrs = get_conditions_for_function(food_df, transl_dis[disorder_type], transl_size[size_categ], transl_age[age_type_categ])
 						  
                           needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)					  
-                          st.write(float(results["max"]["moisture"]))
                           nutr_ranges['Влага'] = st.slider(f"{'Влага'}", 0, 100, (int(results["min"]["moisture"]), int(results["max"]["moisture"])))
                           nutr_ranges['Белки'] = st.slider(f"{'Белки'}", 0, 100, (int(results["min"]["protein"]), int(results["max"]["protein"])))
                           nutr_ranges['Углеводы'] = st.slider(f"{'Углеводы'}", 0, 100, (int(results["min"]["carbohydrate (nfe)"]), int(results["max"]["carbohydrate (nfe)"])))
