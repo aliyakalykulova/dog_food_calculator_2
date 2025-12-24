@@ -61,17 +61,41 @@ disorder_keywords = {
     "Inherited urinary and reproductive disorders": " urinary bladder stones urinary bladder kidney renal urine reproductive",
     "Inherited respiratory disorders": "breath respiratory airway lung cough breathing nasal",
     "Inherited blood disorders": "anemia blood iron hemoglobin platelets clotting hemophilia",
+	
 }
 
 cols_to_divide = ['Влага', 'Белки', 'Углеводы', 'Жиры']
 
+transl_dis={
+ "Inherited musculoskeletal disorders": ["musculoskeletal and joint care"] ,
+    "Inherited gastrointestinal disorders": ["digestive care","food sensitivity"],
+    "Inherited endocrine disorders": ["weight management"],
+    "Inherited eye disorders": ["nervous system care and stress"],
+    "Inherited nervous system disorders": ["nervous system care and stress"],
+    "Inherited cardiovascular disorders": ["heart care"],
+    "Inherited skin disorders": ["skin health"],
+    "Inherited immune disorders": ["aging care","puppy care","adult care"]	,
+    "Inherited urinary and reproductive disorders": ["urinary care"],
+    "Inherited respiratory disorders": ["aging care","puppy care","adult care"]	,
+    "Inherited blood disorders" : ["aging care","puppy care","adult care"]	
+}
 
+transl_size={"Small Breed":"small",  "Medium Breed":"medium", 	"Large Breed":"large"}
+
+transl_age={"Щенки":"puppy","Взрослые":"adult","Пожилые":"senior"}
+
+transl_nutrs={
+	"moisture":'Влага', 
+    "protein":'Белки', 
+    "fat":'Жиры', 
+    "carbohydrate (nfe)":'Углеводы'}
 
 # загрузка и подготовка датасетов-------------------------------------------------------------------------------------
 
 @st.cache_data(show_spinner=False)
 def load_data():
     food = pd.read_csv("dog_food_Hills_Pet_Nutrition.csv")
+	food["category"]=food["category"].astype(str).str.replace("[", "", regex=False).str.replace("]", "", regex=False).str.replace("'", "", regex=False).str.lower().split(", ")
     disease = pd.read_csv("Disease.csv")
 	disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
 
@@ -310,30 +334,26 @@ if age_type_categ==age_category_types[2]:
 
 cols = ["moisture", "protein", "fat", "carbohydrate (nfe)"]
 
-def dfff(df, func_name, breed_size, lifestage):
-	df_func=df[df["function"] == func_name, df["breed_size"] in [breed_size,"-"], df["life_stage"] in [lifestage,"-"]]
-    if 	len(df_func)==0:
-		df_func=df[df["function"] == func_name, df["function"]==lifestage]
-	    if 	len(df_func)==0:
-		   df_func=df[df["function"] == func_name]
-		   if 	len(df_func)==0:
-			   df_func=df[df["breed_size"] in [breed_size,"-"], df["life_stage"] in [lifestage,"-"]]
-	return df_func
+def extract_target_foods(df, func_name, breed_size, lifestage):
+    df_func = df[(df["function"].isin(func_name)) & (df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
+    if len(df_func) == 0:
+        df_func = df[(df["function"].isin(func_name)) & (df["life_stage"] == lifestage)]
+    if len(df_func) == 0:
+        df_func = df[df["function"].isin(func_name)]
+    if len(df_func) == 0:
+        df_func = df[(df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
+    return df_func
 
-def get_stats_for_function_w(df, func_name, breed_size, lifestage):
+def get_conditions_for_function(df, func_name, breed_size, lifestage):
 	df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("function")
-    df_func_w=(df_wet, func_name, breed_size, lifestage)		   
-    result = pd.DataFrame({
-        "min": df_func_w[cols].min(),
-        "max": df_func_w[cols].max()})
+    df_func_w=extract_target_foods(df_wet, func_name, breed_size, lifestage)		   
+    result = pd.DataFrame({"min": df_func_w[cols].min(), "max": df_func_w[cols].max()})
 
     df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("function")
-    df_func_dr=(df_dry, func_name, breed_size, lifestage)		   
+    df_func_dr=extract_target_foods(df_dry, func_name, breed_size, lifestage)		
 
-    maximize=[i for i in cols if df_func_w[i].mean()>df_wet[i].mean() or df_func_dr[cols].mean()>df_dry[cols].mean()]
-
-    return result,maximize
-
+    maximize = [ transl_nutrs(i) for i in cols  if (df_func_w[i].mean() > df_wet[i].mean() or df_func_dr[i].mean() > df_dry[i].mean())]
+    return result, maximize
 
 #--------------------------------------------------------------------------------------------
 # 2 этап настройка условий рецепта  ---------------------------------------------------------
@@ -519,19 +539,21 @@ if user_breed:
                           # --- Ограничения по нутриентам ---
                           st.subheader("Ограничения по нутриентам:")
                           nutr_ranges = {}
-                        
-                          needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)
-                        
-                          nutr_ranges['Влага'] = st.slider(f"{'Влага'}", 0, 100, (70, 85))
-                          nutr_ranges['Белки'] = st.slider(f"{'Белки'}", 0, 100, (6,21))
-                          nutr_ranges['Углеводы'] = st.slider(f"{'Углеводы'}", 0, 100, (5,10))
-                          nutr_ranges['Жиры'] = st.slider(f"{'Жиры'}", 0, 100, (1,15))
+						  
+                          results, maximaze_nutrs = get_conditions_for_function(food_df, transl_dis(disorder_type), transl_size(size_categ), transl_age(age_type_categ))
+						  
+                          needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)					  
+                          
+						  nutr_ranges['Влага'] = st.slider(f"{'Влага'}", 0, 100, (float(results["min"]["moisture"]), float(results["max"]["moisture"])))
+                          nutr_ranges['Белки'] = st.slider(f"{'Белки'}", 0, 100, (float(results["min"]["protein"]), float(results["max"]["protein"])))
+                          nutr_ranges['Углеводы'] = st.slider(f"{'Углеводы'}", 0, 100, (float(results["min"]["carbohydrate (nfe)"]), float(results["max"]["carbohydrate (nfe)"])))
+                          nutr_ranges['Жиры'] = st.slider(f"{'Жиры'}", 0, 100, (float(results["min"]["fat"]), float(results["max"]["fat"])))
 
                           if ingr_ranges != st.session_state.prev_ingr_ranges:
                                 st.session_state.show_result_2 = False
                                 st.session_state.prev_ingr_ranges = ingr_ranges.copy()
                             
-                            # Проверяем, изменились ли ограничения по нутриентам
+                          # Проверяем, изменились ли ограничения по нутриентам
                           if nutr_ranges != st.session_state.prev_nutr_ranges:
                                 st.session_state.show_result_2 = False
                                 st.session_state.prev_nutr_ranges = nutr_ranges.copy()
@@ -557,7 +579,7 @@ if user_breed:
                           selected_maximize = st.multiselect(
                               "Выберите нутриенты для максимизации:",
                               cols_to_divide,
-                              default=['Влага',"Белки"]
+                              default=maximaze_nutrs
                           )
 
                         # Инициализация предыдущего значения
