@@ -151,14 +151,6 @@ carbonates_veg=df_standart[df_standart["Категория"].isin(["Зелень
 other=df_standart[df_standart["Категория"].isin(["Вода, соль и сахар"])]["Ingredient"].tolist()
 water=["water"]
 
-stop_words=["Beta-Carotene","With Natural Antioxidant", "Minerals","Digest","Dicalcium Phosphate","L-Carnitine","L-Threonine","Composition:","L-Tryptophan","Chicken Flavor","Manganese Sulfate"
-"Hydrolyzed Chicken Flavor", "Monosodium Phosphate","Magnesium Oxide","Powdered Cellulose","Taurine","Mixed Tocopherols For Freshness","Natural Flavor","Potassium Alginate","Sodium Tripolyphosphate",
-"Dl-Methionine","Calcium Sulfate","Guar Gum","Betaine","Glyceryl Monostearate","Calcium Chloride","Calcium Lactate","Calcium Gluconate","Natural Flavors","Choline Chloride","Calcium Iodate",
-"Dextrose","Zinc Oxide","Copper Sulfate","Ferrous Sulfate","Niacin Supplement","Thiamine Mononitrate","Calcium Pantothenate","Riboflavin Supplement","Biotin",'Pyridoxine Hydrochloride',
-"Folic Acid","Disodium Phosphate","Potassium Chloride","Chondroitin Sulfate","Copper Proteinate","Potassium Iodide)","Sodium Pyrophosphate","Sodium Hexametaphosphate","Carrageenan",
-"Manganous Oxide","Sodium Selenite","Lipoic Acid","Calcium Carbonate","Vitamin A Supplement","Manganese Sulfate","Derivatives Of Vegetable Origin","Cellulose","Potassium Citrate","Glycerin","Vegetable Protein Extracts",
-"Manganese Sulfate","Caramel Color","Citric Acid For Freshness","Brewers Dried Yeast","Soybean Mill Run","Glucosamine Hydrochloride","Vitamin A Supplement","Pork Plasma","Pork Gelatin"]
-
 
 if "step" not in st.session_state:
     st.session_state.step = 0  # 0 — начальное, 1 — после генерации, 2 — после расчета
