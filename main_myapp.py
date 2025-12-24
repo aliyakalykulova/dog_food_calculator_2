@@ -80,7 +80,7 @@ transl_dis={
     "Inherited blood disorders" : ["aging care","puppy care","adult care"]	
 }
 
-transl_size={"Small Breed":"small",  "Medium Breed":"medium", 	"Large Breed":"large"}
+transl_size={"Мелкие":"small",  "Средние":"medium", 	"Крупные":"large", "Очень крупные":"large"}
 
 transl_age={"Щенки":"puppy","Взрослые":"adult","Пожилые":"senior"}
 
