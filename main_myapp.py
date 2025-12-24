@@ -345,11 +345,11 @@ def extract_target_foods(df, func_name, breed_size, lifestage):
     return df_func
 
 def get_conditions_for_function(df, func_name, breed_size, lifestage):
-		df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("function")
+		df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("category")
 		df_func_w = extract_target_foods(df_wet, func_name, breed_size, lifestage)
 		result = pd.DataFrame({"min": df_func_w[cols].min(), "max": df_func_w[cols].max()})
 		
-		df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("function")
+		df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("category")
 		df_func_dr=extract_target_foods(df_dry, func_name, breed_size, lifestage)		
 		
 		maximize = [ transl_nutrs[i] for i in cols  if (df_func_w[i].mean() > df_wet[i].mean() or df_func_dr[i].mean() > df_dry[i].mean())]
