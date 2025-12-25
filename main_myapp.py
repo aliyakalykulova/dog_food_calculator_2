@@ -61,7 +61,11 @@ disorder_keywords = {
     "Inherited urinary and reproductive disorders": " urinary bladder stones urinary bladder kidney renal urine reproductive",
     "Inherited respiratory disorders": "breath respiratory airway lung cough breathing nasal",
     "Inherited blood disorders": "anemia blood iron hemoglobin platelets clotting hemophilia",
-	
+	"aging care":"aging senior mature",
+	"puppy care":"puppy grow start",
+	"adult care":"adult immune optimal delicious",
+	"weight management":"weight management overweight",
+	"food sensitivity":"food sensitivity hypoallergenic stomach"	
 }
 
 cols_to_divide = ['Влага', 'Белки', 'Углеводы', 'Жиры']
@@ -77,7 +81,12 @@ transl_dis={
     "Inherited immune disorders": ["aging care","puppy care","adult care"]	,
     "Inherited urinary and reproductive disorders": ["urinary care"],
     "Inherited respiratory disorders": ["aging care","puppy care","adult care"]	,
-    "Inherited blood disorders" : ["aging care","puppy care","adult care"]	
+    "Inherited blood disorders" : ["aging care","puppy care","adult care"],
+	"aging care":["aging care"],
+	"puppy care":["puppy care"],
+	"adult care":["adult care"],
+	"weight management":["weight management"],
+	"food sensitivity":["food sensitivity"]
 }
 
 transl_size={"Мелкие":"small",  "Средние":"medium", 	"Крупные":"large", "Очень крупные":"large"}
@@ -362,7 +371,7 @@ if user_breed:
     info = disease_df[disease_df["Breed"] == user_breed]
     if not info.empty:
         breed_size = info["breed_size_category"].values[0]
-        disorders = info["Disease"].unique().tolist()
+        disorders = info["Disease"].unique().tolist()+["Food Sensitivity","Weight Management"]+[i for i in  ["aging care","puppy care","adult care"] if i in transl_age[age_type_categ]]
         selected_disorder = st.selectbox("Заболевание:", disorders)
         disorder_type = info[info["Disease"] == selected_disorder]["Disorder"].values[0]
 
