@@ -201,6 +201,11 @@ ingredient_models, frequent_ingredients = train_ingredient_models(food_df, X_com
 
 # Кнопки и состояния -----------------------------------------------------------------------------------
 # 1 этап выбор характеристик для собаки --------------------------------------------------------------
+
+st.button("En")
+st.button("Ru")
+
+
 st.set_page_config(page_title="Рекомендации по питанию собак", layout="centered")
 st.header("Рекомендации по питанию собак")
 if "show_result_1" not in st.session_state:
