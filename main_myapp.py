@@ -373,7 +373,7 @@ if user_breed:
         breed_size = info["breed_size_category"].values[0]
         disorders = info["Disease"].unique().tolist()+["Food Sensitivity","Weight Management"]+[i for i in  ["aging care","puppy care","adult care"] if i in transl_age[age_type_categ]]
         st.write(disorders)
-		selected_disorder = st.selectbox("Заболевание:", disorders)
+        selected_disorder = st.selectbox("Заболевание:", disorders)
         disorder_type = info[info["Disease"] == selected_disorder]["Disorder"].values[0]
 
         if user_breed != st.session_state.select1 or selected_disorder!= st.session_state.select2:
