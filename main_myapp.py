@@ -371,8 +371,8 @@ if user_breed:
     info = disease_df[disease_df["Breed"] == user_breed]
     if not info.empty:
         breed_size = info["breed_size_category"].values[0]
-        disorders = info["Disease"].unique().tolist()+["Food Sensitivity","Weight Management"]+[i for i in  ["aging care","puppy care","adult care"] if i in transl_age[age_type_categ]]
-        st.write(disorders)
+        disorders = info["Disease"].unique().tolist()+["Food Sensitivity","Weight Management"]+[i for i in  ["aging care","puppy care","adult care"] if transl_age[age_type_categ] in i]
+        st.write(transl_age[age_type_categ])
         selected_disorder = st.selectbox("Заболевание:", disorders)
         disorder_type = info[info["Disease"] == selected_disorder]["Disorder"].values[0]
 
