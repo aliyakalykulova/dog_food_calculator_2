@@ -704,7 +704,7 @@ if user_breed:
 
                                   st.markdown("### 💪 Питательная ценность на 100 г:")
                                   nutrients = {
-                                      nutr: round(sum(res.x[i] * food[name][nutr] for i, name in enumerate(ingredient_names)) * 100, 2)
+                                      nutr: round(sum(res.x[i] * food[name][nutr]/100 for i, name in enumerate(ingredient_names)) * 100, 2)
                                       for nutr in cols_to_divide
                                   }
                                   for k, v in nutrients.items():
