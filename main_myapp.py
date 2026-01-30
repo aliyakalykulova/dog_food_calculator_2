@@ -718,28 +718,7 @@ if user_breed:
 
                                   st.write(f"****")
 
-                                  missing = set()
-
-                                  count_nutr_cont_all = {}
-                                  for nutr in other_nutrients + major_minerals + vitamins:
-                                      total = 0
-                                      for i, name in enumerate(ingredient_names):
-                                          if nutr not in food[name]:
-                                              missing.add((name, nutr))
-                                          total += res.x[i] * food[name].get(nutr, 0)
-                                      count_nutr_cont_all[nutr] = round(total * 100, 2)
-                                  
-                                  if missing:
-                                      st.warning(f"Отсутствуют значения для: {missing}")
-
-
-
-                                  count_nutr_cont_all = {
-                                      nutr: round(sum(res.x[i] * food[name][nutr] for i, name in enumerate(ingredient_names)) * 100, 2)
-                                      for nutr in other_nutrients+major_minerals+vitamins
-                                  }
-
-
+                            
                                   st.markdown(f"### Сколько нужно в граммах корма и ингредиентов на {int(round(metobolic_energy,0))} ккал")           
                                   needed_feed_g = (metobolic_energy * 100) / en_nutr_100
                                   ingredients_required = {
@@ -753,7 +732,7 @@ if user_breed:
 
                                 
                                   count_nutr_cont_all = {
-                                      nutr: round(sum(amount * food[ingredient][nutr] for ingredient, amount in ingredients_required.items()), 2)
+                                      nutr: round(sum(amount * food[ingredient][nutr]/100 for ingredient, amount in ingredients_required.items()), 2)
                                       for nutr in cols_to_divide+other_nutrients+major_minerals+vitamins
                                   }
 
@@ -837,7 +816,7 @@ if user_breed:
                                         st.write(f" - {ingredient.replace(" — Обыкновенный", "")}: {int(round(amount,0))} г")
 
                                     count_nutr_cont_all = {
-                                      nutr: round(sum(amount * food[ingredient][nutr] for ingredient, amount in ingredients_required.items()), 2)
+                                      nutr: round(sum(amount * food[ingredient][nutr]/100 for ingredient, amount in ingredients_required.items()), 2)
                                       for nutr in cols_to_divide+other_nutrients+major_minerals+vitamins }
                                     
 
