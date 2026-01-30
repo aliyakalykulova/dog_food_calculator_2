@@ -704,7 +704,7 @@ if user_breed:
                                   result = {name: round(val * 100, 2) for name, val in zip(ingredient_names, res.x)}
                                   st.markdown("### 📦 Состав (в граммах на 100 г):")
                                   for name, value in result.items():
-                                      st.write(f"{name.replace(" — Обыкновенный", "")}: **{value} г**")
+                                      st.write(f"{name.replace(" — Обыкновенный", "")}: **{int(round(value,0))} г**")
 
                                   st.markdown("### 💪 Питательная ценность на 100 г:")
                                   nutrients = {
@@ -712,9 +712,9 @@ if user_breed:
                                       for nutr in cols_to_divide
                                   }
                                   for k, v in nutrients.items():
-                                      st.write(f"**{k}:** {v} г")
+                                      st.write(f"**{k}:** {int(round(v,0))} г")
                                   en_nutr_100=3.5*nutrients["Белки"]+8.5*nutrients["Жиры"]+3.5*nutrients["Углеводы"]
-                                  st.write(f"**Энергетическая ценность:** {round(en_nutr_100,2)} ккал")
+                                  st.write(f"**Энергетическая ценность:** {int(round(en_nutr_100,0))} ккал")
 
                                   st.write(f"****")
 
@@ -740,16 +740,16 @@ if user_breed:
                                   }
 
 
-                                  st.markdown(f"### Сколько нужно в граммах корма и ингредиентов на {round(metobolic_energy,1)} ккал")           
+                                  st.markdown(f"### Сколько нужно в граммах корма и ингредиентов на {int(round(metobolic_energy,0))} ккал")           
                                   needed_feed_g = (metobolic_energy * 100) / en_nutr_100
                                   ingredients_required = {
                                       name: round((weight * needed_feed_g / 100), 2)
                                       for name, weight in result.items()
                                   }                                  
-                                  st.write(f"📌 Корм: {round(needed_feed_g, 2)} г")
+                                  st.write(f"📌 Корм: {int(round(needed_feed_g, 0))} г")
                                   st.write("🧾 Количество ингредиентов для этой порции:")
                                   for ingredient, amount in ingredients_required.items():
-                                      st.write(f" - {ingredient.replace(" — Обыкновенный", "")}: {amount} г")
+                                      st.write(f" - {ingredient.replace(" — Обыкновенный", "")}: {int(round(amount,0))} г")
 
                                 
                                   count_nutr_cont_all = {
@@ -757,10 +757,10 @@ if user_breed:
                                       for nutr in cols_to_divide+other_nutrients+major_minerals+vitamins
                                   }
 
-                                  st.markdown(f"### 💪 Питательная ценность на {round(needed_feed_g, 2)} г:")
+                                  st.markdown(f"### 💪 Питательная ценность на {int(round(needed_feed_g, 0))} г:")
 
                                   for k in cols_to_divide:
-                                      st.write(f"**{k}:** {count_nutr_cont_all[k]/100} г")
+                                      st.write(f"**{k}:** {int(round(count_nutr_cont_all[k]/100, 0))} г")
                                   st.write(f"****") 
                                 
                                   show_nutr_content(count_nutr_cont_all, other_nutrient_norms)    
@@ -812,15 +812,15 @@ if user_breed:
                     
                                     st.markdown("### 📦 Состав (в граммах на 100 г):")
                                     for name, val in values.items():
-                                        st.write(f"{name.replace(" — Обыкновенный", "")}: **{round(val, 2)} г**")
+                                        st.write(f"{name.replace(" — Обыкновенный", "")}: **{int(round(val, 0))} г**")
  
                                     
                                     st.markdown("### 💪 Питательная ценность на 100 г:")
                                     for nutr in cols_to_divide:
-                                        st.write(f"**{nutr}:** {round(totals[nutr], 2)} г")
+                                        st.write(f"**{nutr}:** {int(round(totals[nutr], 0))} г")
                                    
                                     en_nutr_100=3.5*totals["Белки"]+8.5*totals["Жиры"]+3.5*totals["Углеводы"]
-                                    st.write(f"**Энергетическая ценность:** {round(en_nutr_100,2)} ккал")
+                                    st.write(f"**Энергетическая ценность:** {int(round(en_nutr_100,0))} ккал")
 
 
 
@@ -834,17 +834,17 @@ if user_breed:
                                     st.write(f"📌 Корм: {round(needed_feed_g, 2)} г")
                                     st.write("🧾 Количество ингредиентов для этой порции:")
                                     for ingredient, amount in ingredients_required.items():
-                                        st.write(f" - {ingredient.replace(" — Обыкновенный", "")}: {amount} г")
+                                        st.write(f" - {ingredient.replace(" — Обыкновенный", "")}: {int(round(amount,0))} г")
 
                                     count_nutr_cont_all = {
                                       nutr: round(sum(amount * food[ingredient][nutr] for ingredient, amount in ingredients_required.items()), 2)
                                       for nutr in cols_to_divide+other_nutrients+major_minerals+vitamins }
                                     
 
-                                    st.markdown(f"### 💪 Питательная ценность на {round(needed_feed_g, 2)} г:")
+                                    st.markdown(f"### 💪 Питательная ценность на {int(round(needed_feed_g, 0))} г:")
 
                                     for k in cols_to_divide:
-                                      st.write(f"**{k}:** {count_nutr_cont_all[k]} г")
+                                      st.write(f"**{k}:** {int(round(count_nutr_cont_all[k],0))} г")
                                     st.write(f"****") 
                                     show_nutr_content(count_nutr_cont_all, other_nutrient_norms)   
 
