@@ -804,7 +804,7 @@ if user_breed:
 
 
                                     
-                                    st.markdown(f"### Сколько нужно в граммах корма и ингредиентов на {round(metobolic_energy,1)} ккал")           
+                                    st.markdown(f"### Сколько нужно в граммах корма и ингредиентов на {int(round(metobolic_energy,0))} ккал")           
                                     needed_feed_g = (metobolic_energy * 100) / en_nutr_100
                                     ingredients_required = {
                                         name: round((weight * needed_feed_g / 100), 2)
