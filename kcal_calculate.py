@@ -57,7 +57,7 @@ def show_nutr_content(count_nutr_cont_all, other_nutrient_norms):
                                               else:
                                                 emg="g"
                                               with col:
-                                                  st.markdown(f"**{nutr_text[0]}**: count_nutr_cont_all.get(nutris, '')} {emg}")
+                                                  st.markdown(f"**{nutr_text[0]}**: {count_nutr_cont_all.get(nutris, '')} {emg}")
 
                                   coli, colii=st.columns([6,3])
                                   with coli:
