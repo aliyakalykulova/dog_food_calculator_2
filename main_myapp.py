@@ -739,7 +739,7 @@ if user_breed:
                                   st.markdown(f"### 💪 Питательная ценность на {int(round(needed_feed_g, 0))} г:")
 
                                   for k in cols_to_divide:
-                                      st.write(f"**{k}:** {int(round(count_nutr_cont_all[k]/100, 0))} г")
+                                      st.write(f"**{k}:** {int(round(count_nutr_cont_all[k], 0))} г")
                                   st.write(f"****") 
                                 
                                   show_nutr_content(count_nutr_cont_all, other_nutrient_norms)    
