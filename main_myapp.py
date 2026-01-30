@@ -101,6 +101,31 @@ transl_nutrs={
 
 # загрузка и подготовка датасетов-------------------------------------------------------------------------------------
 
+from scipy.sparse import csr_matrix
+import numpy as np
+
+def apply_category_masks(X, encoder):
+    X = X.toarray()
+    feature_names = encoder.get_feature_names_out()
+
+    idx = {name: i for i, name in enumerate(feature_names)}
+
+    # пример: breed_size = "-"
+    if "breed_size_-" in idx:
+        mask = X[:, idx["breed_size_-"]] == 1
+        for k in ["breed_size_s", "breed_size_m", "breed_size_l"]:
+            if k in idx:
+                X[mask, idx[k]] = 1
+
+    # life_stage = "-"
+    if "life_stage_-" in idx:
+        mask = X[:, idx["life_stage_-"]] == 1
+        for k in ["life_stage_puppy", "life_stage_adult", "life_stage_senior"]:
+            if k in idx:
+                X[mask, idx[k]] = 1
+
+    return csr_matrix(X)
+
 @st.cache_data(show_spinner=False)
 def load_data():
     food = pd.read_csv("dog_food_Hills_Pet_Nutrition.csv")
@@ -148,12 +173,21 @@ vectorizer, svd, X_text_reduced = build_text_pipeline(food_df["combination_clean
 
 @st.cache_resource(show_spinner=False)
 def build_categorical_encoder(df):
-    enc = OneHotEncoder(sparse_output=True, handle_unknown="ignore")
-    cats = df[["breed_size", "life_stage"]].fillna("Unknown")
+    cats = df[["breed_size", "life_stage"]]
+
+    enc = OneHotEncoder(
+        sparse_output=True,
+        handle_unknown="ignore"
+    )
+
     enc.fit(cats)
-    return enc, enc.transform(cats)
+    X = enc.transform(cats)
+
+    return enc, X
 
 encoder, X_categorical = build_categorical_encoder(food_df)
+
+X_categorical=apply_category_masks(X_categorical,encoder)
 
 # -----------------------------------
 # 6) COMBINE FEATURES INTO SPARSE MATRIX
@@ -173,19 +207,24 @@ X_combined = combine_features(X_text_reduced, X_categorical)
 
 @st.cache_resource(show_spinner=False)
 def train_ingredient_models(food, _X):
-    all_ings = []
+    parsed_ings = []
     for txt in food["ingredients"].dropna():
-        tokens=txt.replace("[","").replace("]","").replace("'","").split(", ")
-        all_ings.extend(tokens)
+        tokens = (txt.replace("[", "").replace("]", "").replace("'", "").lower().split(", ") )
+        parsed_ings.append(set(tokens))
 
-    counts = Counter(all_ings)
-    frequent = [ing for ing, cnt in counts.items() if cnt >= 5]
+    # --- 2) Список уникальных ингредиентов ---
+    all_ings = [ing for s in parsed_ings for ing in s]
+    frequent = list(set(all_ings))
 
+    # --- 3) Формирование бинарных таргетов ---
     targets = {}
-    low = food["ingredients"].fillna("").str.lower()
-    for ing in frequent:
-        targets[ing] = low.apply(lambda s: int(ing in s)).values
+    parsed_series = food["ingredients"].fillna("").apply(
+        lambda txt: set(txt.replace("[", "").replace("]", "").replace("'", "").lower().split(", ")) if txt else set())
 
+    for ing in frequent:
+        targets[ing] = parsed_series.apply(lambda s: int(ing in s)).values
+
+    # --- 4) Обучение моделей ---
     ing_models = {}
     for ing, y in targets.items():
         clf = RidgeClassifier()
@@ -198,6 +237,41 @@ def train_ingredient_models(food, _X):
 ingredient_models, frequent_ingredients = train_ingredient_models(food_df, X_combined)
 
 
+vectorizer_wet, svd_wet, X_text_reduced_wet = build_text_pipeline(food_df[food_df["food_form"]=="wet food"]["combination_clean"], n_components=100)
+encoder_wet, X_categorical_wet = build_categorical_encoder(food_df[food_df["food_form"]=="wet food"])
+X_categorical_wet=apply_category_masks(X_categorical_wet,encoder_wet)
+X_combined_wet = combine_features(X_text_reduced_wet, X_categorical_wet)
+#X_combined = csr_matrix(X_text_reduced)
+
+@st.cache_resource(show_spinner=False)
+def train_nutrient_models(food, _X):
+    nutrient_models = {}
+    scalers = {}
+
+    nutrients = ['moisture', 'protein', 'fat', 'carbohydrate (nfe)']
+  
+    for nutrient in nutrients:
+        y = food[nutrient].fillna(food[nutrient].median()).values.reshape(-1, 1)
+        scaler = None
+        y_scaled = y.ravel()
+        X_train, _, y_train, _ = train_test_split(_X, y_scaled, test_size=0.2, random_state=42)
+        base = Ridge()
+        search = GridSearchCV(
+            base,
+            param_grid={"alpha": [0.1, 1.0]},
+            scoring="r2",
+            cv=2,
+            n_jobs=-1,
+        )
+        search.fit(X_train, y_train)
+
+        nutrient_models[nutrient] = search.best_estimator_
+        scalers[nutrient] = scaler
+
+    return nutrient_models, scalers
+
+# **This line must run at import-time** so ridge_models is defined before you use it below:
+ridge_models, scalers = train_nutrient_models(food_df[food_df["food_form"]=="wet food"], X_combined_wet)
 
 # Кнопки и состояния -----------------------------------------------------------------------------------
 # 1 этап выбор характеристик для собаки --------------------------------------------------------------
@@ -357,13 +431,12 @@ def extract_target_foods(df, func_name, breed_size, lifestage):
 def get_conditions_for_function(df, func_name, breed_size, lifestage):
 		df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("category")
 		df_func_w = extract_target_foods(df_wet, func_name, breed_size, lifestage)
-		result = pd.DataFrame({"min": df_func_w[cols].min(), "max": df_func_w[cols].max()})
 		
 		df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("category")
 		df_func_dr=extract_target_foods(df_dry, func_name, breed_size, lifestage)		
 		
 		maximize = [ transl_nutrs[i] for i in cols  if (df_func_w[i].mean() > df_wet[i].mean() or df_func_dr[i].mean() > df_dry[i].mean())]
-		return result, maximize
+		return  maximize
 
 #--------------------------------------------------------------------------------------------
 # 2 этап настройка условий рецепта  ---------------------------------------------------------
@@ -421,7 +494,7 @@ if user_breed:
                 for ing, clf in ingredient_models.items()
             }
             top_ings = sorted(ing_scores.items(), key=lambda x: x[1], reverse=True)
-			
+
             prot=sorted([i[0] for i in top_ings if i[0] in proteins], key=lambda x: x[1], reverse=True)[:1]
             prot=df_standart[df_standart["Ingredient"].isin(prot)]["Standart"].tolist()
 
@@ -435,6 +508,19 @@ if user_breed:
             fat=df_standart[df_standart["Ingredient"].isin(fat)]["Standart"].tolist()
             wat=df_standart[df_standart["Ingredient"].isin(water)]["Standart"].tolist()
             ingredients_finish = [i for i in prot+carb_cer+carb_veg+fat+wat if len(i)>0]
+
+            kw_tfidf = vectorizer_wet.transform([keywords])
+            kw_reduced = svd_wet.transform(kw_tfidf)
+            cat_vec = encoder_wet.transform([[breed_size, transl_age[age_type_categ]]])
+            cat_vec = apply_category_masks(cat_vec,encoder_wet)
+            kw_combined = hstack([csr_matrix(kw_reduced), cat_vec])
+            nutrient_preds = {}
+            for nut, model in ridge_models.items():
+                      pred = model.predict(kw_combined)[0]
+                      sc = scalers.get(nut)
+                      if sc:
+                        pred = sc.inverse_transform([[pred]])[0][0]
+                      nutrient_preds[nut] = float(round(pred, 2))
 			
             # Display
             st.subheader("🌿 Рекомендуемые ингредиенты")
@@ -448,7 +534,7 @@ if user_breed:
                           ingredirents_df[col] = pd.to_numeric(ingredirents_df[col], errors='coerce')
                         
                       ingredirents_df['ЭПК (50-60%) + ДГК (40-50%), г'] = ingredirents_df['ЭПК, г']*0.5 + ingredirents_df['ДГК, г']*0.5
-                      ingredirents_df[cols_to_divide+other_nutrients+major_minerals+vitamins] = ingredirents_df[cols_to_divide+other_nutrients+major_minerals+vitamins] / 100
+                      ingredirents_df[cols_to_divide+other_nutrients+major_minerals+vitamins] = ingredirents_df[cols_to_divide+other_nutrients+major_minerals+vitamins]
                       ingredirents_df['ингредиент и описание'] = ingredirents_df['Ингредиенты'] + ' — ' + ingredirents_df['Описание']
                       
 
@@ -538,10 +624,10 @@ if user_breed:
                                 ingr_ranges.append(st.slider(f"{ingr.replace(" — Обыкновенный", "")}", 0, 100, (1,10)))
 
                               elif ingr in carbonates_cer:
-                                ingr_ranges.append(st.slider(f"{ingr.replace(" — Обыкновенный", "")}", 0, 100, (10,35)))
+                                ingr_ranges.append(st.slider(f"{ingr.replace(" — Обыкновенный", "")}", 0, 100, (5,35)))
 
                               elif ingr in carbonates_veg:
-                                ingr_ranges.append(st.slider(f"{ingr.replace(" — Обыкновенный", "")}", 0, 100, (10,25)))
+                                ingr_ranges.append(st.slider(f"{ingr.replace(" — Обыкновенный", "")}", 0, 100, (5,25)))
                               elif "Вода" in ingr:
                                 ingr_ranges.append(st.slider(f"{ingr.replace(" — Обыкновенный", "")}", 0, 100, (0,30)))
                               elif ingr in other:
@@ -551,14 +637,14 @@ if user_breed:
                           # --- Ограничения по нутриентам ---
                           st.subheader("Ограничения по нутриентам:")
                           nutr_ranges = {}
-                          results, maximaze_nutrs = get_conditions_for_function(food_df, transl_dis[disorder_type], transl_size[size_categ], transl_age[age_type_categ])
+                           maximaze_nutrs = get_conditions_for_function(food_df, transl_dis[disorder_type], transl_size[size_categ], transl_age[age_type_categ])
 						  
                           needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)					  
-                          nutr_ranges['Влага'] = st.slider(f"{'Влага'}", 0, 100, (int(results["min"]["moisture"]), int(results["max"]["moisture"])))
-                          nutr_ranges['Белки'] = st.slider(f"{'Белки'}", 0, 100, (int(results["min"]["protein"]), int(results["max"]["protein"])))
-                          nutr_ranges['Углеводы'] = st.slider(f"{'Углеводы'}", 0, 100, (int(results["min"]["carbohydrate (nfe)"]), int(results["max"]["carbohydrate (nfe)"])))
-                          nutr_ranges['Жиры'] = st.slider(f"{'Жиры'}", 0, 100, (int(results["min"]["fat"]), int(results["max"]["fat"])))
-
+                          nutr_ranges['Влага'] = st.slider(f"{'Влага'}", 0, 100, (int(nutrient_preds["moisture"]-5), int(nutrient_preds["moisture"]+5)))
+                          nutr_ranges['Белки'] = st.slider(f"{'Белки'}", 0, 100, (int(nutrient_preds["protein"]-3), int(nutrient_preds["protein"]+3)))
+                          nutr_ranges['Углеводы'] = st.slider(f"{'Углеводы'}", 0, 100, (int(nutrient_preds["carbohydrate (nfe)"]-2), int(nutrient_preds["carbohydrate (nfe)"]+2)))
+                          nutr_ranges['Жиры'] = st.slider(f"{'Жиры'}", 0, 100, (int(nutrient_preds["fat"]-1), int(nutrient_preds["fat"]+1)) )
+						  
                           if ingr_ranges != st.session_state.prev_ingr_ranges:
                                 st.session_state.show_result_2 = False
                                 st.session_state.prev_ingr_ranges = ingr_ranges.copy()
@@ -570,10 +656,10 @@ if user_breed:
                           
                           # --- Построение задачи LP ---
                           A = [
-                              [food[ing][nutr] if val > 0 else -food[ing][nutr]
+                              [food[ing][nutr]/100 if val > 0 else -food[ing][nutr]/100
                               for ing in ingredient_names]
                               for nutr in nutr_ranges
-                              for val in (-nutr_ranges[nutr][0]/100, nutr_ranges[nutr][1]/100)
+                              for val in (-nutr_ranges[nutr][0], nutr_ranges[nutr][1])
                           ]
                           b = [
                               val / 100 for nutr in nutr_ranges
