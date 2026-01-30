@@ -710,7 +710,7 @@ if user_breed:
                                   for k, v in nutrients.items():
                                       st.write(f"**{k}:** {v} г")
                                   en_nutr_100=3.5*nutrients["Белки"]+8.5*nutrients["Жиры"]+3.5*nutrients["Углеводы"]
-                                  st.write(f"**Энергетическая ценность:** {en_nutr_100} ккал")
+                                  st.write(f"**Энергетическая ценность:** {round(en_nutr_100,2)} ккал")
 
                                   st.write(f"****")
 
@@ -756,7 +756,7 @@ if user_breed:
                                   st.markdown(f"### 💪 Питательная ценность на {round(needed_feed_g, 2)} г:")
 
                                   for k in cols_to_divide:
-                                      st.write(f"**{k}:** {count_nutr_cont_all[k]} г")
+                                      st.write(f"**{k}:** {count_nutr_cont_all[k]/100} г")
                                   st.write(f"****") 
                                 
                                   show_nutr_content(count_nutr_cont_all, other_nutrient_norms)    
@@ -784,7 +784,7 @@ if user_breed:
                                             totals = {nutr: 0.0 for nutr in cols_to_divide}
                                             for i, ingr in enumerate(ingredient_names):
                                                 for nutr in cols_to_divide:
-                                                    totals[nutr] += values[ingr] * food[ingr][nutr]
+                                                    totals[nutr] += values[ingr] * food[ingr][nutr]/100
                             
                                             # Штраф за отклонения от допустимых диапазонов
                                             penalty = 0
