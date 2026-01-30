@@ -97,7 +97,7 @@ def show_nutr_content(count_nutr_cont_all, other_nutrient_norms):
                                     if name_n in other_nutrient_norms:
                                       diff=other_nutrient_norms[name_n] - amount
                                       if diff>0:
-                                         st.write(f"**{name_n}:** {round(diff,1)} {emg}")
+                                         st.write(f"**{name_n}:** {round(diff,2)} {emg}")
                                         
 
 
