@@ -233,6 +233,9 @@ def train_ingredient_models(food, _X):
 
     return ing_models, frequent
 
+
+
+
 # **This line must run at import-time** so ingredient_models is defined before you use it below:
 ingredient_models, frequent_ingredients = train_ingredient_models(food_df, X_combined)
 
@@ -495,18 +498,19 @@ if user_breed:
             }
             top_ings = sorted(ing_scores.items(), key=lambda x: x[1], reverse=True)
 
-            prot=sorted([i[0] for i in top_ings if i[0] in proteins], key=lambda x: x[1], reverse=True)[:1]
-            prot=df_standart[df_standart["Ingredient"].isin(prot)]["Standart"].tolist()
+            prot=sorted([i for i in top_ings if i[0] in proteins], key=lambda x: x[1], reverse=True)[0][0]
+            prot=df_standart[df_standart["Ingredient"]==prot]["Standart"].tolist()
 
-            carb_cer=sorted([i[0] for i in top_ings if i[0] in carbonates_cer ], key=lambda x: x[1], reverse=True)[:1]
-            carb_cer=df_standart[df_standart["Ingredient"].isin(carb_cer)]["Standart"].tolist()
+            carb_cer=sorted([i for i in top_ings if i[0] in carbonates_cer and i[0]!="flaxseed"], key=lambda x: x[1], reverse=True)[0][0]
+            carb_cer=df_standart[df_standart["Ingredient"]==carb_cer]["Standart"].tolist()
 
-            carb_veg=sorted([i[0] for i in top_ings if i[0] in carbonates_veg], key=lambda x: x[1], reverse=True)[:1]
-            carb_veg=df_standart[df_standart["Ingredient"].isin(carb_veg)]["Standart"].tolist()
+            carb_veg=sorted([i for i in top_ings if i[0] in carbonates_veg], key=lambda x: x[1], reverse=True)[0][0]
+            carb_veg=df_standart[df_standart["Ingredient"]==carb_veg]["Standart"].tolist()
 
-            fat=sorted([i[0] for i in top_ings if i[0] in oils], key=lambda x: x[1], reverse=True)[:1]
-            fat=df_standart[df_standart["Ingredient"].isin(fat)]["Standart"].tolist()
+            fat=sorted([i for i in top_ings if i[0] in oils], key=lambda x: x[1], reverse=True)[0][0]
+            fat=df_standart[df_standart["Ingredient"]==fat]["Standart"].tolist()
             wat=df_standart[df_standart["Ingredient"].isin(water)]["Standart"].tolist()
+			
             ingredients_finish = [i for i in prot+carb_cer+carb_veg+fat+wat if len(i)>0]
 
             kw_tfidf = vectorizer_wet.transform([keywords])
