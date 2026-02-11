@@ -14,14 +14,12 @@ activity_level_cat_1 = ["Пассивный (гуляеет на поводке 
                           "Высокая активность в экстремальных условиях (гонки на собачьих упряжках со скоростью 168 км/день в условиях сильного холода)",
                           "Взрослые, склонные к ожирению"]
 activity_level_cat_2 = ["Пассивный", "Средний", "Активный"]
-other_nutrients_1=["Зола, г","Клетчатка, г","Холестерин, мг","Сахар общее, г"]
-other_nutrients_2 = ["Холин, мг","Селен, мкг","Йод, мкг","Пантотеновая кислота, мг","Линолевая кислота, г","Фолиевая кислота, мкг","Альфа-линоленовая кислота, г","Арахидоновая кислота, г","ЭПК (50-60%) + ДГК (40-50%), г"]
+
+other_nutrients_1=['ash_g', 'fiber_g', 'cholesterol_mg', 'total_sugar_g']
+other_nutrients_2 = ['choline_mg', 'selenium_mcg', 'iodine_mcg', 'linoleic_acid_g','alpha_linolenic_acid_g', 'arachidonic_acid_g', 'epa_g', 'dha_g']
 other_nutrients=other_nutrients_1+other_nutrients_2
-
-major_minerals=["Кальций, мг","Медь, мг","Железо, мг","Магний, мг","Фосфор, мг","Калий, мг",
-                "Натрий, мг","Цинк, мг", "Марганец, мг"]
-
-vitamins=[ "Витамин A, мкг","Витамин E, мг","Витамин Д, мкг","Витамин В1 (тиамин), мг","Витамин В2 (Рибофлавин), мг","Витамин В3 (Ниацин), мг","Витамин В6, мг","Витамин В12, мкг"]
+major_minerals=['calcium_mg', 'phosphorus_mg', 'magnesium_mg', 'sodium_mg', 'potassium_mg', 'iron_mg', 'copper_mg', 'zinc_mg', 'manganese_mg']
+vitamins=['vitamin_a_mcg', 'vitamin_e_mg', 'vitamin_d_mcg', 'vitamin_b1_mg', 'vitamin_b2_mg', 'vitamin_b3_mg', 'vitamin_b5_mg', 'vitamin_b6_mg', 'vitamin_b9_mcg', 'vitamin_b12_mcg', 'vitamin_c_mg', 'vitamin_k_mcg']
 
 def classify_breed_size(row):
     w = (row["min_weight"] + row["max_weight"]) / 2
@@ -101,39 +99,38 @@ def show_nutr_content(count_nutr_cont_all, other_nutrient_norms):
                                         
 
 
-
 def get_other_nutrient_norms(kkal, age_type_categ,  w, reproductive_status):
    if age_type_categ==age_category_types[0]:
          nutrients_per_1000_kcal = {
-              "Кальций": 3000*kkal/1000,
-              "Фосфор": 2500*kkal/1000,
-              "Магний": 100*kkal/1000,
-              "Натрий": 550*kkal/1000,
-              "Калий": 1100*kkal/1000,
-              "Железо": 22*kkal/1000,
-              "Медь": 2.7*kkal/1000,
-              "Цинк": 25*kkal/1000,
-              "Марганец": 1.4*kkal/1000,
+              "calcium_mg": 3000*kkal/1000,
+              "phosphorus_mg": 2500*kkal/1000,
+              "magnesium_mg": 100*kkal/1000,
+              "sodium_mg": 550*kkal/1000,
+              "potassium_mg": 1100*kkal/1000,
+              "iron_mg": 22*kkal/1000,
+              "copper_mg": 2.7*kkal/1000,
+              "zinc_mg": 25*kkal/1000,
+              "manganese_mg": 1.4*kkal/1000,
 
-              "Витамин A": 378.9*kkal/1000,
-              "Витамин Д": 3.4*kkal/1000,
-              "Витамин E": 7.5*kkal/1000,
-              "Витамин В1 (тиамин)": 0.34*kkal/1000,
-              "Витамин В2 (Рибофлавин)": 1.32*kkal/1000,
-              "Витамин В3 (Ниацин)": 4.25*kkal/1000,
-              "Витамин В6": 0.375*kkal/1000,
-              "Витамин В12": 8.75*kkal/1000,
+              "vitamin_a_mcg": 378.9*kkal/1000,
+              "vitamin_d_mcg": 3.4*kkal/1000,
+              "vitamin_e_mg": 7.5*kkal/1000,
+              "vitamin_b1_mg": 0.34*kkal/1000,
+              "vitamin_b2_mg": 1.32*kkal/1000,
+              "vitamin_b3_mg": 4.25*kkal/1000,
+              "vitamin_b6_mg": 0.375*kkal/1000,
+              "vitamin_b12_mcg": 8.75*kkal/1000,
                          
-              "Селен": 87.5*kkal/1000,
-              "Холин": 425*kkal/1000,
-              "Пантотеновая кислота": 3.75*kkal/1000,
-              "Линолевая кислота": 3.3*kkal/1000,
-              "Фолиевая кислота": 68*kkal/1000,
-              "Альфа-линоленовая кислота": 0.2*kkal/1000,
-              "Арахидоновая кислота": 0.08*kkal/1000,
-              "ЭПК (50-60%) + ДГК (40-50%)": 0.13*kkal/1000,
+              "selenium_mcg": 87.5*kkal/1000,
+              "choline_mg": 425*kkal/1000,
+              "vitamin_b5_mg": 3.75*kkal/1000,
+              "linoleic_acid_g": 3.3*kkal/1000,
+              "vitamin_b9_mcg": 68*kkal/1000,
+              "alpha_linolenic_acid_g": 0.2*kkal/1000,
+              "arachidonic_acid_g": 0.08*kkal/1000,
+              "epa_g(50-60%) + dha_g(40-50%)": 0.13*kkal/1000,
            
-              "Йод": 220*kkal/1000,
+              "iodine_mcg": 220*kkal/1000,
               "Биотин (мкг)": 4*kkal/1000
              }
 
@@ -141,68 +138,68 @@ def get_other_nutrient_norms(kkal, age_type_categ,  w, reproductive_status):
      
    elif reproductive_status==rep_status_types[1] or reproductive_status==rep_status_types[2]:
          nutrients_per_1000_kcal = {
-          "Кальций": 1900*kkal/1000,
-          "Фосфор": 1200*kkal/1000,
-          "Магний": 150*kkal/1000,
-          "Натрий": 500*kkal/1000,
-          "Калий": 900*kkal/1000,
-          "Железо": 17*kkal/1000,
-          "Медь": 3.1*kkal/1000,
-          "Цинк": 24*kkal/1000,
-          "Марганец": 1.8*kkal/1000,
- 
-          "Витамин A": 378.9*kkal/1000,
-          "Витамин Д": 3.4*kkal/1000,
-          "Витамин E": 7.5*kkal/1000,
-          "Витамин В1 (тиамин)": 0.56*kkal/1000,
-          "Витамин В2 (Рибофлавин)": 1.3*kkal/1000,
-          "Витамин В3 (Ниацин)": 4.25*kkal/1000,
-          "Витамин В6": 0.375*kkal/1000,
-          "Витамин В12": 8.75*kkal/1000,
-                 
-          "Селен": 87.5*kkal/1000,
-          "Холин": 425*kkal/1000,
-          "Пантотеновая кислота": 3.75*kkal/1000,
-          "Фолиевая кислота": 67.5*kkal/1000,
-          "Биотин": 4*kkal/1000,
-          "Линолевая кислота": 3.3*kkal/1000,
-          "Альфа-линоленовая кислота": 0.2*kkal/1000,
-          "ЭПК (50-60%) + ДГК (40-50%)": 0.13*kkal/1000,
-         
-          "Йод": 220*kkal/1000,
-          "Биотин": 4*kkal/1000
+nutrients_per_1000_kcal = {
+    "calcium_mg": 1900*kkal/1000,
+    "phosphorus_mg": 1200*kkal/1000,
+    "magnesium_mg": 150*kkal/1000,
+    "sodium_mg": 500*kkal/1000,
+    "potassium_mg": 900*kkal/1000,
+    "iron_mg": 17*kkal/1000,
+    "copper_mg": 3.1*kkal/1000,
+    "zinc_mg": 24*kkal/1000,
+    "manganese_mg": 1.8*kkal/1000,
+
+    "vitamin_a_mcg": 378.9*kkal/1000,
+    "vitamin_d_mcg": 3.4*kkal/1000,
+    "vitamin_e_mg": 7.5*kkal/1000,
+    "vitamin_b1_mg": 0.56*kkal/1000,
+    "vitamin_b2_mg": 1.3*kkal/1000,
+    "vitamin_b3_mg": 4.25*kkal/1000,
+    "vitamin_b6_mg": 0.375*kkal/1000,
+    "vitamin_b12_mcg": 8.75*kkal/1000,
+
+    "selenium_mcg": 87.5*kkal/1000,
+    "choline_mg": 425*kkal/1000,
+    "vitamin_b5_mg": 3.75*kkal/1000,
+    "vitamin_b9_mcg": 67.5*kkal/1000,
+    "linoleic_acid_g": 3.3*kkal/1000,
+    "alpha_linolenic_acid_g": 0.2*kkal/1000,
+    "epa_g(50-60%) + dha_g(40-50%)": 0.13*kkal/1000,
+
+    "iodine_mcg": 220*kkal/1000,
+    "Биотин": 4*kkal/1000
          }
          return nutrients_per_1000_kcal
 
    else:  
       other_for_adult = {
-          "Кальций": 130*(w**0.75),
-          "Фосфор": 100*(w**0.75),
-          "Магний": 19.7*(w**0.75),
-          "Натрий": 26.2*(w**0.75),
-          "Калий": 140*(w**0.75),
-          "Железо": 1.0*(w**0.75),
-          "Медь": 0.2*(w**0.75),
-          "Цинк": 2.0*(w**0.75),
-          "Марганец": 0.16*(w**0.75),
-          
-          "Витамин A": 4.175*(w**0.75),
-          "Витамин Д": 0.45*(w**0.75),
-          "Витамин E": 1.0*(w**0.75),
-          "Витамин В1 (тиамин)": 0.074*(w**0.75),
-          "Витамин В2 (Рибофлавин)": 0.171*(w**0.75),
-          "Витамин В3 (Ниацин)": 0.57*(w**0.75),
-          "Витамин В6": 0.049*(w**0.75),
-          "Витамин В12": 1.15*(w**0.75),
-        
-          "Селен": 11.8*(w**0.75),
-          "Йод": 29.6*(w**0.75),
-          "Пантотеновая кислота": 0.49*(w**0.75),
-          "Фолиевая кислота": 8.9*(w**0.75),
-          "Холин": 56*(w**0.75),
-          "Линолевая кислота": 0.36*(w**0.75),
-          "Альфа-линоленовая кислота": 0.014*(w**0.75),
-          "ЭПК (50-60%) + ДГК (40-50%)": 0.03*(w**0.75)
+    "calcium_mg": 130*(w**0.75),
+    "phosphorus_mg": 100*(w**0.75),
+    "magnesium_mg": 19.7*(w**0.75),
+    "sodium_mg": 26.2*(w**0.75),
+    "potassium_mg": 140*(w**0.75),
+    "iron_mg": 1.0*(w**0.75),
+    "copper_mg": 0.2*(w**0.75),
+    "zinc_mg": 2.0*(w**0.75),
+    "manganese_mg": 0.16*(w**0.75),
+
+    "vitamin_a_mcg": 4.175*(w**0.75),
+    "vitamin_d_mcg": 0.45*(w**0.75),
+    "vitamin_e_mg": 1.0*(w**0.75),
+    "vitamin_b1_mg": 0.074*(w**0.75),
+    "vitamin_b2_mg": 0.171*(w**0.75),
+    "vitamin_b3_mg": 0.57*(w**0.75),
+    "vitamin_b6_mg": 0.049*(w**0.75),
+    "vitamin_b12_mcg": 1.15*(w**0.75),
+
+    "selenium_mcg": 11.8*(w**0.75),
+    "iodine_mcg": 29.6*(w**0.75),
+    "vitamin_b5_mg": 0.49*(w**0.75),
+    "vitamin_b9_mcg": 8.9*(w**0.75),
+    "choline_mg": 56*(w**0.75),
+    "linoleic_acid_g": 0.36*(w**0.75),
+    "alpha_linolenic_acid_g": 0.014*(w**0.75),
+    "epa_g(50-60%) + dha_g(40-50%)": 0.03*(w**0.75)
        }
       return other_for_adult
 
