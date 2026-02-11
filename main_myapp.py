@@ -481,7 +481,7 @@ def get_conditions_for_function(df, func_name, breed_size, lifestage):
 		df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("category")
 		df_func_dr=extract_target_foods(df_dry, func_name, breed_size, lifestage)		
 		
-		maximize = [ nutrients_transl[i] for i in main_nutrs  if (df_func_w[i].mean() > df_wet[i].mean() or df_func_dr[i].mean() > df_dry[i].mean())]
+		maximize = [ nutrients_transl[i] for i in main_nutrs  if (df_func_w[i.replace("_per","")].mean() > df_wet[i.replace("_per","")].mean() or df_func_dr[i.replace("_per","")].mean() > df_dry[i.replace("_per","")].mean())]
 		return  maximize
 
 #--------------------------------------------------------------------------------------------
