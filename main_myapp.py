@@ -145,7 +145,6 @@ def load_data():
 	disease = pd.read_csv("Disease.csv")
 	disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
 
-
     standart = pd.read_csv("ingredient_standardization.csv")
     ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
 
