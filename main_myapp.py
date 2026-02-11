@@ -403,8 +403,8 @@ if "kkal_sel" not in st.session_state:
 breed_list = sorted(disease_df["name_breed"].unique())
 user_breed = st.selectbox("Порода собаки:", breed_list)
 
-min_weight = disease_df.loc[disease_df["Breed"] == user_breed, "min_weight"].values
-max_weight = disease_df.loc[disease_df["Breed"] == user_breed, "max_weight"].values
+min_weight = disease_df.loc[disease_df["name_breed"] == user_breed, "min_weight"].values
+max_weight = disease_df.loc[disease_df["name_breed"] == user_breed, "max_weight"].values
 avg_wight=(max_weight[0]+min_weight[0])/2
 
 size_categ = size_category(avg_wight)
@@ -465,7 +465,7 @@ def get_conditions_for_function(df, func_name, breed_size, lifestage):
 # 2 этап настройка условий рецепта  ---------------------------------------------------------
 
 if user_breed:
-    info = disease_df[disease_df["Breed"] == user_breed]
+    info = disease_df[disease_df["name_breed"] == user_breed]
     if not info.empty:
         breed_size = info["breed_size_category"].values[0]
         disorders = info["Disease"].unique().tolist()+["food sensitivity","weight management"]+[i for i in  ["aging care","puppy care","adult care"] if transl_age[age_type_categ] in i]
