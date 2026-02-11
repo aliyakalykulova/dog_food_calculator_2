@@ -23,6 +23,7 @@ from kcal_calculate import get_other_nutrient_norms
 from kcal_calculate import show_nutr_content
 from kcal_calculate import protein_need_calc
 from kcal_calculate import classify_breed_size
+import sqlite3
 
 # все спсики-------------------------------------------------------------------------
 
@@ -128,8 +129,24 @@ def apply_category_masks(X, encoder):
 
 @st.cache_data(show_spinner=False)
 def load_data():
-    food = pd.read_csv("dog_food_Hills_Pet_Nutrition.csv")
-    food["category"] = (food["category"].astype(str).str.replace("[", "", regex=False).str.replace("]", "", regex=False).str.replace("'", "", regex=False).str.lower().str.split(", "))
+    food = pd.read_sql("""
+SELECT    name_product, description, ingredients, GROUP_CONCAT(category.category) AS categories,
+    food_form.food_form,  breed_size.breed_size,  life_stage.life_stage, 
+    moisture, protein, fat, carbohydrate
+
+FROM dog_food
+
+INNER JOIN dog_food_characteristics ON dog_food_characteristics.id_dog_food = dog_food.id_dog_food
+INNER JOIN breed_size ON dog_food_characteristics.id_breed_size = breed_size.id_breed_size
+INNER JOIN life_stage ON dog_food_characteristics.id_life_stage = life_stage.id_life_stage
+INNER JOIN food_form ON dog_food_characteristics.id_food_form = food_form.id_food_form
+INNER JOIN food_category_connect ON food_category_connect.id_dog_food = dog_food.id_dog_food
+INNER JOIN category ON food_category_connect.id_category = category.id_category
+INNER JOIN nutrient_macro ON nutrient_macro.id_dog_food = dog_food.id_dog_food
+GROUP BY dog_food.id_dog_food
+""", conn)
+
+    food["category"] = (food["category"].astype(str).str.split(", "))
     disease = pd.read_csv("Disease.csv")
     disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
 
@@ -209,7 +226,7 @@ X_combined = combine_features(X_text_reduced, X_categorical)
 def train_ingredient_models(food, _X):
     parsed_ings = []
     for txt in food["ingredients"].dropna():
-        tokens = (txt.replace("[", "").replace("]", "").replace("'", "").lower().split(", ") )
+        tokens = (txt.split(", ") )
         parsed_ings.append(set(tokens))
 
     # --- 2) Список уникальных ингредиентов ---
@@ -219,7 +236,7 @@ def train_ingredient_models(food, _X):
     # --- 3) Формирование бинарных таргетов ---
     targets = {}
     parsed_series = food["ingredients"].fillna("").apply(
-        lambda txt: set(txt.replace("[", "").replace("]", "").replace("'", "").lower().split(", ")) if txt else set())
+        lambda txt: set(txt.split(", ")) if txt else set())
 
     for ing in frequent:
         targets[ing] = parsed_series.apply(lambda s: int(ing in s)).values
@@ -251,7 +268,7 @@ def train_nutrient_models(food, _X):
     nutrient_models = {}
     scalers = {}
 
-    nutrients = ['moisture', 'protein', 'fat', 'carbohydrate (nfe)']
+    nutrients = ['moisture', 'protein', 'fat', 'carbohydrate']
   
     for nutrient in nutrients:
         y = food[nutrient].fillna(food[nutrient].median()).values.reshape(-1, 1)
@@ -419,7 +436,7 @@ if age_type_categ==age_category_types[2]:
 
 #------------------------ выбор функции максимизации и нутриентных ограничен
 
-cols = ["moisture", "protein", "fat", "carbohydrate (nfe)"]
+cols = ["moisture", "protein", "fat", "carbohydrate"]
 
 def extract_target_foods(df, func_name, breed_size, lifestage):
     df_func = df[(df["category"].isin(func_name)) & (df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
