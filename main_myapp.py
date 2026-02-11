@@ -581,7 +581,6 @@ if user_breed:
                         if col !='ЭПК (50-60%) + ДГК (40-50%), г':
                           ingredirents_df[col] = ingredirents_df[col].astype(str).str.replace(',', '.', regex=False)
                           ingredirents_df[col] = pd.to_numeric(ingredirents_df[col], errors='coerce')
-                        'epa_g', 'dha_g'
                       ingredirents_df['epa_g(50-60%) + dha_g(40-50%)'] = ingredirents_df['epa_g']*0.5 + ingredirents_df['dha_g']*0.5
                       ingredirents_df[main_nutrs+other_nutrients+major_minerals+vitamins] = ingredirents_df[main_nutrs+other_nutrients+major_minerals+vitamins]
                      
