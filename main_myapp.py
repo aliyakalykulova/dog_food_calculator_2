@@ -141,9 +141,20 @@ INNER JOIN food_category_connect ON food_category_connect.id_dog_food = dog_food
 INNER JOIN category ON food_category_connect.id_category = category.id_category 
 INNER JOIN nutrient_macro ON nutrient_macro.id_dog_food = dog_food.id_dog_food 
 GROUP BY dog_food.id_dog_food""", conn)
+	
     food["category"] = (food["category"].astype(str).str.split(", "))
-    disease = pd.read_csv("Disease.csv")
+
+	conn= sqlite3.connect("dog_breed_disease.db")
+    disease = pd.read_sql("""SELECT breed_name.name_ru as name_breed,  min_weight, max_weight, disease.name_ru as name_disease, name_disorder
+                FROM breed 
+                inner join breed_name on breed.id_breed = breed_name.id_breed
+                inner join breed_disease on breed.id_breed = breed_disease.id_breed
+                inner join disease on disease.id_disease= breed_disease.id_disease
+                inner join disease_disorder on disease.id_disease= disease_disorder.id_disease
+                inner join disorder on disorder.id_disorder=disease_disorder.id_disorder""", conn)
+	
     disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
+	
     standart = pd.read_csv("ingredient_standardization.csv")
     ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
     standart = standart.rename(columns={'Ingredient_USDA': 'Description'})
