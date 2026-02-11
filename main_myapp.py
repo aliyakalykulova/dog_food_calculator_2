@@ -144,7 +144,7 @@ GROUP BY dog_food.id_dog_food""", conn)
 	
     food["category"] = (food["category"].astype(str).str.split(", "))
 
-	conn= sqlite3.connect("dog_breed_disease.db")
+    conn= sqlite3.connect("dog_breed_disease.db")
     disease = pd.read_sql("""SELECT breed_name.name_ru as name_breed,  min_weight, max_weight, disease.name_ru as name_disease, name_disorder
                 FROM breed 
                 inner join breed_name on breed.id_breed = breed_name.id_breed
