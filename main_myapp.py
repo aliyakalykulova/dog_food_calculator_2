@@ -144,15 +144,12 @@ def load_data():
 	food["category"] = (food["category"].astype(str).str.split(", "))
 	disease = pd.read_csv("Disease.csv")
 	disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
-
-    standart = pd.read_csv("ingredient_standardization.csv")
+	standart = pd.read_csv("ingredient_standardization.csv")
     ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
-
     standart = standart.rename(columns={'Ingredient_USDA': 'Description'})
     standart = standart.merge(ingredirents_df, on=['Category', 'Description'], how='inner')
     standart = standart.rename(columns={'Ingredient_pet_food': 'Ingredient'})
     standart["Standart"] = standart["Ингредиенты"] + " — " + standart["Описание"]
-
     return food, disease, standart, ingredirents_df
 
 food_df, disease_df, df_standart, ingredirents_df = load_data()
