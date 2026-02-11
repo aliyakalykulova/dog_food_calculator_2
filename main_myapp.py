@@ -581,16 +581,15 @@ if user_breed:
                         if col !='ЭПК (50-60%) + ДГК (40-50%), г':
                           ingredirents_df[col] = ingredirents_df[col].astype(str).str.replace(',', '.', regex=False)
                           ingredirents_df[col] = pd.to_numeric(ingredirents_df[col], errors='coerce')
-                        
-                      ingredirents_df['ЭПК (50-60%) + ДГК (40-50%), г'] = ingredirents_df['ЭПК, г']*0.5 + ingredirents_df['ДГК, г']*0.5
+                        'epa_g', 'dha_g'
+                      ingredirents_df['epa_g(50-60%) + dha_g(40-50%)'] = ingredirents_df['epa_g']*0.5 + ingredirents_df['dha_g']*0.5
                       ingredirents_df[main_nutrs+other_nutrients+major_minerals+vitamins] = ingredirents_df[main_nutrs+other_nutrients+major_minerals+vitamins]
-                      ingredirents_df['ингредиент и описание'] = ingredirents_df['Ингредиенты'] + ' — ' + ingredirents_df['Описание']
-                      
-                      proteins=ingredirents_df[ingredirents_df["category_ru"].isin(["Яйца и Молочные продукты", "Мясо"])]["ингредиент и описание"].tolist()
-                      oils=ingredirents_df[ingredirents_df["category_ru"].isin([ "Масло и жир"])]["ингредиент и описание"].tolist()
-                      carbonates_cer=ingredirents_df[ingredirents_df["category_ru"].isin(["Крупы"])]["ингредиент и описание"].tolist()
-                      carbonates_veg=ingredirents_df[ingredirents_df["category_ru"].isin(["Зелень и специи","Овощи и фрукты"])]["ингредиент и описание"].tolist()
-                      other=ingredirents_df[ingredirents_df["category_ru"].isin(["Вода, соль и сахар"])]["ингредиент и описание"].tolist()
+                     
+                      proteins=ingredirents_df[ingredirents_df["category_ru"].isin(["Яйца и Молочные продукты", "Мясо"])]["ingredient_format_cat"].tolist()
+                      oils=ingredirents_df[ingredirents_df["category_ru"].isin([ "Масло и жир"])]["ingredient_format_cat"].tolist()
+                      carbonates_cer=ingredirents_df[ingredirents_df["category_ru"].isin(["Крупы"])]["ingredient_format_cat"].tolist()
+                      carbonates_veg=ingredirents_df[ingredirents_df["category_ru"].isin(["Зелень и специи","Овощи и фрукты"])]["ingredient_format_cat"].tolist()
+                      other=ingredirents_df[ingredirents_df["category_ru"].isin(["Вода, соль и сахар"])]["ingredient_format_cat"].tolist()
 
                       meat_len=len(set(proteins).intersection(set(ingredients_finish)))
 
@@ -602,12 +601,12 @@ if user_breed:
                           st.session_state.selected_ingredients = set(ingredients_finish)
 
                       st.title("🍲 Выбор ингредиентов")
-                      for category in ingredirents_df['Категория'].dropna().unique():
+                      for category in ingredirents_df['category_ru'].dropna().unique():
                           with st.expander(f"{category}"):
-                              df_cat = ingredirents_df[ingredirents_df['Категория'] == category]
-                              for ingredient in df_cat['Ингредиенты'].dropna().unique():
-                                  df_ing = df_cat[df_cat['Ингредиенты'] == ingredient]
-                                  unique_descs = df_ing['Описание'].dropna().unique()
+                              df_cat = ingredirents_df[ingredirents_df['category_ru'] == category]
+                              for ingredient in df_cat['name_ingredient_ru'].dropna().unique():
+                                  df_ing = df_cat[df_cat['name_ingredient_ru'] == ingredient]
+                                  unique_descs = df_ing['format_ingredient_ru'].dropna().unique()
                                   
                                   # Описание, отличное от "Обыкновенный"
                                   non_regular_descs = [desc for desc in unique_descs if desc.lower() != "обыкновенный"]
@@ -657,7 +656,7 @@ if user_breed:
                           st.rerun()
                       # Пример: доступ к выбранным
                       ingredient_names = list(st.session_state.selected_ingredients)
-                      food = ingredirents_df.set_index("ингредиент и описание")[main_nutrs+other_nutrients+major_minerals+vitamins].to_dict(orient='index')
+                      food = ingredirents_df.set_index("ingredient_format_cat")[main_nutrs+other_nutrients+major_minerals+vitamins].to_dict(orient='index')
 
 
                       # --- Ограничения по количеству каждого ингредиента ---
@@ -757,7 +756,7 @@ if user_breed:
                                   }
                                   for k, v in nutrients.items():
                                       st.write(f"**{k}:** {int(round(v,0))} г")
-                                  en_nutr_100=3.5*nutrients["Белки"]+8.5*nutrients["Жиры"]+3.5*nutrients["Углеводы"]
+                                  en_nutr_100=3.5*nutrients["protein_per"]+8.5*nutrients["fats_per"]+3.5*nutrients["carbohydrate_per"]
                                   st.write(f"**Энергетическая ценность:** {int(round(en_nutr_100,0))} ккал")
 
                                   st.write(f"****")
