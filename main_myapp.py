@@ -294,7 +294,7 @@ def train_nutrient_models(food, _X):
     nutrient_models = {}
     scalers = {}
 
-    nutrients = ['moisture', 'protein', 'fat', 'carbohydrate']
+    nutrients = ['moisture', 'protein', 'fats', 'carbohydrate']
   
     for nutrient in nutrients:
         y = food[nutrient].fillna(food[nutrient].median()).values.reshape(-1, 1)
