@@ -96,7 +96,6 @@ transl_nutrs={
     "protein":'Белки', 
     "fat":'Жиры', 
     "carbohydrate":'Углеводы'}
-
 # загрузка и подготовка датасетов-------------------------------------------------------------------------------------
 
 from scipy.sparse import csr_matrix
@@ -129,7 +128,7 @@ def load_data():
     conn = sqlite3.connect("pet_food.db")
     food=pd.read_sql("""SELECT name_product, description, ingredients, GROUP_CONCAT(category.category) AS category,
 food_form.food_form,  breed_size.breed_size,  life_stage.life_stage, 
-moisture, protein, fat, carbohydrate FROM dog_food 
+moisture, protein, fat as fats, carbohydrate FROM dog_food 
 INNER JOIN dog_food_characteristics ON dog_food_characteristics.id_dog_food = dog_food.id_dog_food 
 INNER JOIN breed_size ON dog_food_characteristics.id_breed_size = breed_size.id_breed_size
 INNER JOIN life_stage ON dog_food_characteristics.id_life_stage = life_stage.id_life_stage 
