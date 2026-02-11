@@ -400,7 +400,7 @@ if "activity_level_sel" not in st.session_state:
 if "kkal_sel" not in st.session_state:
     st.session_state.kkal_sel = None
 
-breed_list = sorted(disease_df["Breed"].unique())
+breed_list = sorted(disease_df["name_breed"].unique())
 user_breed = st.selectbox("Порода собаки:", breed_list)
 
 min_weight = disease_df.loc[disease_df["Breed"] == user_breed, "min_weight"].values
