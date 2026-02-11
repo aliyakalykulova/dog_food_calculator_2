@@ -836,8 +836,7 @@ if user_breed:
                                     st.markdown("### 💪 Питательная ценность на 100 г:")
                                     for nutr in main_nutrs:
                                         st.write(f"**{nutr}:** {int(round(totals[nutr], 0))} г")
-                                   'protein_per': 'Белки, %',
-
+										
                                     en_nutr_100=3.5*totals["protein_per"]+8.5*totals["fats_per"]+3.5*totals["carbohydrate_per"]
                                     st.write(f"**Энергетическая ценность:** {int(round(en_nutr_100,0))} ккал")
 
