@@ -40,6 +40,7 @@ activity_level_cat_1 = ["Пассивный (гуляеет на поводке 
                           "Взрослые, склонные к ожирению"]
 activity_level_cat_2 = ["Пассивный", "Средний", "Активный"]
 
+main_nutrs=['moisture_per', 'protein_per', 'carbohydrate_per', 'fats_per']
 other_nutrients_1=['ash_g', 'fiber_g', 'cholesterol_mg', 'total_sugar_g']
 other_nutrients_2 = ['choline_mg', 'selenium_mcg', 'iodine_mcg', 'linoleic_acid_g','alpha_linolenic_acid_g', 'arachidonic_acid_g', 'epa_g', 'dha_g']
 other_nutrients=other_nutrients_1+other_nutrients_2
@@ -576,13 +577,13 @@ if user_breed:
                 st.write("• " + ing)
             if len(ingredients_finish)>0:               
 
-                      for col in cols_to_divide+other_nutrients+major_minerals+vitamins:
+                      for col in main_nutrs+other_nutrients+major_minerals+vitamins:
                         if col !='ЭПК (50-60%) + ДГК (40-50%), г':
                           ingredirents_df[col] = ingredirents_df[col].astype(str).str.replace(',', '.', regex=False)
                           ingredirents_df[col] = pd.to_numeric(ingredirents_df[col], errors='coerce')
                         
                       ingredirents_df['ЭПК (50-60%) + ДГК (40-50%), г'] = ingredirents_df['ЭПК, г']*0.5 + ingredirents_df['ДГК, г']*0.5
-                      ingredirents_df[cols_to_divide+other_nutrients+major_minerals+vitamins] = ingredirents_df[cols_to_divide+other_nutrients+major_minerals+vitamins]
+                      ingredirents_df[main_nutrs+other_nutrients+major_minerals+vitamins] = ingredirents_df[main_nutrs+other_nutrients+major_minerals+vitamins]
                       ingredirents_df['ингредиент и описание'] = ingredirents_df['Ингредиенты'] + ' — ' + ingredirents_df['Описание']
                       
                       proteins=ingredirents_df[ingredirents_df["category_ru"].isin(["Яйца и Молочные продукты", "Мясо"])]["ингредиент и описание"].tolist()
@@ -656,7 +657,7 @@ if user_breed:
                           st.rerun()
                       # Пример: доступ к выбранным
                       ingredient_names = list(st.session_state.selected_ingredients)
-                      food = ingredirents_df.set_index("ингредиент и описание")[cols_to_divide+other_nutrients+major_minerals+vitamins].to_dict(orient='index')
+                      food = ingredirents_df.set_index("ингредиент и описание")[main_nutrs+other_nutrients+major_minerals+vitamins].to_dict(orient='index')
 
 
                       # --- Ограничения по количеству каждого ингредиента ---
