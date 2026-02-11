@@ -130,17 +130,7 @@ def apply_category_masks(X, encoder):
 @st.cache_data(show_spinner=False)
 def load_data():
 	conn = sqlite3.connect("pet_food.db")
-    food = pd.read_sql(""" SELECT name_product, description, ingredients, GROUP_CONCAT(category.category) AS categories, food_form.food_form,  breed_size.breed_size,  life_stage.life_stage,
-                           moisture, protein, fat, carbohydrate
-                           FROM dog_food
-                           INNER JOIN dog_food_characteristics ON dog_food_characteristics.id_dog_food = dog_food.id_dog_food
-                           INNER JOIN breed_size ON dog_food_characteristics.id_breed_size = breed_size.id_breed_size
-                           INNER JOIN life_stage ON dog_food_characteristics.id_life_stage = life_stage.id_life_stage
-                           INNER JOIN food_form ON dog_food_characteristics.id_food_form = food_form.id_food_form
-                           INNER JOIN food_category_connect ON food_category_connect.id_dog_food = dog_food.id_dog_food
-                           INNER JOIN category ON food_category_connect.id_category = category.id_category
-                           INNER JOIN nutrient_macro ON nutrient_macro.id_dog_food = dog_food.id_dog_food
-                           GROUP BY dog_food.id_dog_food """, conn)
+    food = pd.read_sql(""" SELECT name_product, description, ingredients, GROUP_CONCAT(category.category) AS categories, food_form.food_form,  breed_size.breed_size,  life_stage.life_stage, moisture, protein, fat, carbohydrate FROM dog_food INNER JOIN dog_food_characteristics ON dog_food_characteristics.id_dog_food = dog_food.id_dog_food INNER JOIN breed_size ON dog_food_characteristics.id_breed_size = breed_size.id_breed_size INNER JOIN life_stage ON dog_food_characteristics.id_life_stage = life_stage.id_life_stage INNER JOIN food_form ON dog_food_characteristics.id_food_form = food_form.id_food_form INNER JOIN food_category_connect ON food_category_connect.id_dog_food = dog_food.id_dog_food INNER JOIN category ON food_category_connect.id_category = category.id_category INNER JOIN nutrient_macro ON nutrient_macro.id_dog_food = dog_food.id_dog_food GROUP BY dog_food.id_dog_food """, conn)
 
     food["category"] = (food["category"].astype(str).str.split(", "))
     disease = pd.read_csv("Disease.csv")
