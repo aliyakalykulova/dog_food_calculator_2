@@ -137,7 +137,6 @@ def get_other_nutrient_norms(kkal, age_type_categ,  w, reproductive_status):
      
    elif reproductive_status==rep_status_types[1] or reproductive_status==rep_status_types[2]:
          nutrients_per_1000_kcal = {
-nutrients_per_1000_kcal = {
     "calcium_mg": 1900*kkal/1000,
     "phosphorus_mg": 1200*kkal/1000,
     "magnesium_mg": 150*kkal/1000,
