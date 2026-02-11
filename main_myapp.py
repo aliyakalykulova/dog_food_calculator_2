@@ -174,7 +174,7 @@ def build_text_pipeline(corpus, n_components=100):
     X_reduced = svd.fit_transform(X_tfidf)
     return vect, svd, X_reduced
 
-vectorizer, svd, X_text_reduced = build_text_pipeline(food_df["combination_clean"], n_components=100)
+vectorizer, svd, X_text_reduced = build_text_pipeline(food_df["description"], n_components=100)
 
 # -----------------------------------
 # 5) CATEGORICAL ENCODING
@@ -249,7 +249,7 @@ def train_ingredient_models(food, _X):
 ingredient_models, frequent_ingredients = train_ingredient_models(food_df, X_combined)
 
 
-vectorizer_wet, svd_wet, X_text_reduced_wet = build_text_pipeline(food_df[food_df["food_form"]=="wet food"]["combination_clean"], n_components=100)
+vectorizer_wet, svd_wet, X_text_reduced_wet = build_text_pipeline(food_df[food_df["food_form"]=="wet food"]["description"], n_components=100)
 encoder_wet, X_categorical_wet = build_categorical_encoder(food_df[food_df["food_form"]=="wet food"])
 X_categorical_wet=apply_category_masks(X_categorical_wet,encoder_wet)
 X_combined_wet = combine_features(X_text_reduced_wet, X_categorical_wet)
