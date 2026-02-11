@@ -154,21 +154,22 @@ GROUP BY dog_food.id_dog_food""", conn)
                 inner join disorder on disorder.id_disorder=disease_disorder.id_disorder""", conn)
 	
     disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
-	
-    standart = pd.read_csv("ingredient_standardization.csv")
+    conn=sqlite3.connect("ingredients.db")
+    standart = pd.read_sql("""SELECT name_feed_ingredient,  ingredients_translation.name_ru || " — " || format_ingredients_translation.name_ru AS ingredient_full_ru, ingredient_category.name_ru as category_ru     
+FROM  ingredient_mapping
+inner join ingredient on ingredient.id_ingredient	= ingredient_mapping.id_ingredient
+inner join ingredients_translation on ingredients_translation.id_ingredient_name=ingredient.id_ingredient_name
+inner join format_ingredients_translation on format_ingredients_translation.id_format_ingredient = ingredient.id_format_ingredient
+inner join ingredient_category on ingredient_category.id_category = ingredient.id_category""", conn)
     ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
-    standart = standart.rename(columns={'Ingredient_USDA': 'Description'})
-    standart = standart.merge(ingredirents_df, on=['Category', 'Description'], how='inner')
-    standart = standart.rename(columns={'Ingredient_pet_food': 'Ingredient'})
-    standart["Standart"] = standart["Ингредиенты"] + " — " + standart["Описание"]
     return food, disease, standart, ingredirents_df
 
 food_df, disease_df, df_standart, ingredirents_df = load_data()
 
-proteins=df_standart[df_standart["Категория"].isin(["Мясо","Яйца и Молочные продукты"])]["Ingredient"].tolist()
-oils=df_standart[df_standart["Категория"].isin([ "Масло и жир"])]["Ingredient"].tolist()
-carbonates_cer=df_standart[df_standart["Категория"].isin(["Крупы"])]["Ingredient"].tolist()
-carbonates_veg=df_standart[df_standart["Категория"].isin(["Зелень и специи","Овощи и фрукты"])]["Ingredient"].tolist()
+proteins=df_standart[df_standart["category_ru"].isin(["Мясо","Яйца и Молочные продукты"])]["name_feed_ingredient"].tolist()
+oils=df_standart[df_standart["category_ru"].isin([ "Масло и жир"])]["name_feed_ingredient"].tolist()
+carbonates_cer=df_standart[df_standart["category_ru"].isin(["Крупы"])]["name_feed_ingredient"].tolist()
+carbonates_veg=df_standart[df_standart["category_ru"].isin(["Зелень и специи","Овощи и фрукты"])]["name_feed_ingredient"].tolist()
 water=["water"]
 
 
@@ -519,17 +520,17 @@ if user_breed:
             top_ings = sorted(ing_scores.items(), key=lambda x: x[1], reverse=True)
 
             prot=sorted([i for i in top_ings if i[0] in proteins], key=lambda x: x[1], reverse=True)[0][0]
-            prot=df_standart[df_standart["Ingredient"]==prot]["Standart"].tolist()
+            prot=df_standart[df_standart["name_feed_ingredient"]==prot]["ingredient_full_ru"].tolist()
 
             carb_cer=sorted([i for i in top_ings if i[0] in carbonates_cer and i[0]!="flaxseed"], key=lambda x: x[1], reverse=True)[0][0]
-            carb_cer=df_standart[df_standart["Ingredient"]==carb_cer]["Standart"].tolist()
+            carb_cer=df_standart[df_standart["name_feed_ingredient"]==carb_cer]["ingredient_full_ru"].tolist()
 
             carb_veg=sorted([i for i in top_ings if i[0] in carbonates_veg], key=lambda x: x[1], reverse=True)[0][0]
-            carb_veg=df_standart[df_standart["Ingredient"]==carb_veg]["Standart"].tolist()
+            carb_veg=df_standart[df_standart["name_feed_ingredient"]==carb_veg]["ingredient_full_ru"].tolist()
 
             fat=sorted([i for i in top_ings if i[0] in oils], key=lambda x: x[1], reverse=True)[0][0]
-            fat=df_standart[df_standart["Ingredient"]==fat]["Standart"].tolist()
-            wat=df_standart[df_standart["Ingredient"].isin(water)]["Standart"].tolist()
+            fat=df_standart[df_standart["name_feed_ingredient"]==fat]["ingredient_full_ru"].tolist()
+            wat=df_standart[df_standart["name_feed_ingredient"].isin(water)]["ingredient_full_ru"].tolist()
 			
             ingredients_finish = [i for i in prot+carb_cer+carb_veg+fat+wat if len(i)>0]
 
@@ -562,11 +563,11 @@ if user_breed:
                       ingredirents_df['ингредиент и описание'] = ingredirents_df['Ингредиенты'] + ' — ' + ingredirents_df['Описание']
                       
 
-                      proteins=ingredirents_df[ingredirents_df["Категория"].isin(["Яйца и Молочные продукты", "Мясо"])]["ингредиент и описание"].tolist()
-                      oils=ingredirents_df[ingredirents_df["Категория"].isin([ "Масло и жир"])]["ингредиент и описание"].tolist()
-                      carbonates_cer=ingredirents_df[ingredirents_df["Категория"].isin(["Крупы"])]["ингредиент и описание"].tolist()
-                      carbonates_veg=ingredirents_df[ingredirents_df["Категория"].isin(["Зелень и специи","Овощи и фрукты"])]["ингредиент и описание"].tolist()
-                      other=ingredirents_df[ingredirents_df["Категория"].isin(["Вода, соль и сахар"])]["ингредиент и описание"].tolist()
+                      proteins=ingredirents_df[ingredirents_df["category_ru"].isin(["Яйца и Молочные продукты", "Мясо"])]["ингредиент и описание"].tolist()
+                      oils=ingredirents_df[ingredirents_df["category_ru"].isin([ "Масло и жир"])]["ингредиент и описание"].tolist()
+                      carbonates_cer=ingredirents_df[ingredirents_df["category_ru"].isin(["Крупы"])]["ингредиент и описание"].tolist()
+                      carbonates_veg=ingredirents_df[ingredirents_df["category_ru"].isin(["Зелень и специи","Овощи и фрукты"])]["ингредиент и описание"].tolist()
+                      other=ingredirents_df[ingredirents_df["category_ru"].isin(["Вода, соль и сахар"])]["ингредиент и описание"].tolist()
 
                       meat_len=len(set(proteins).intersection(set(ingredients_finish)))
 
