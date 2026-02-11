@@ -129,6 +129,7 @@ def apply_category_masks(X, encoder):
 
 @st.cache_data(show_spinner=False)
 def load_data():
+	conn = sqlite3.connect("pet_food.db")
     food = pd.read_sql("""
 SELECT    name_product, description, ingredients, GROUP_CONCAT(category.category) AS categories,
     food_form.food_form,  breed_size.breed_size,  life_stage.life_stage, 
