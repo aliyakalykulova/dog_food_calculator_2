@@ -141,7 +141,6 @@ def load_data():
 						INNER JOIN category ON food_category_connect.id_category = category.id_category 
 						INNER JOIN nutrient_macro ON nutrient_macro.id_dog_food = dog_food.id_dog_food 
 						GROUP BY dog_food.id_dog_food""", conn)
-	
     food["category"] = (food["category"].astype(str).str.split(", "))
     disease = pd.read_csv("Disease.csv")
     disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
