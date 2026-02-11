@@ -162,7 +162,7 @@ inner join ingredients_translation on ingredients_translation.id_ingredient_name
 inner join format_ingredients_translation on format_ingredients_translation.id_format_ingredient = ingredient.id_format_ingredient
 inner join ingredient_category on ingredient_category.id_category = ingredient.id_category""", conn)
 
-	ingredirents_df =  pd.read_sql("""SELECT format_ingredient, ingredients_translation.name_ru as name_ingredient_ru , format_ingredients_translation.name_ru as format_ingredient_ru, ingredient_category.name_ru as category_ru, 
+    ingredirents_df =  pd.read_sql("""SELECT format_ingredient, ingredients_translation.name_ru as name_ingredient_ru , format_ingredients_translation.name_ru as format_ingredient_ru, ingredient_category.name_ru as category_ru, 
 
                       ingredients_translation.name_ru || " — " || format_ingredients_translation.name_ru AS ingredient_format_cat,
 
