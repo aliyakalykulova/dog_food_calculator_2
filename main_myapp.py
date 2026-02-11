@@ -67,7 +67,6 @@ disorder_keywords = {
 	"food sensitivity":"food sensitivity hypoallergenic stomach"	
 }
 
-cols_to_divide = ['Влага', 'Белки', 'Углеводы', 'Жиры']
 
 transl_dis={
  "Inherited musculoskeletal disorders": ["musculoskeletal and joint care"] ,
@@ -464,7 +463,6 @@ if age_type_categ==age_category_types[2]:
 
 #------------------------ выбор функции максимизации и нутриентных ограничен
 
-cols = ["moisture", "protein", "fat", "carbohydrate"]
 
 def extract_target_foods(df, func_name, breed_size, lifestage):
     df_func = df[(df["category"].isin(func_name)) & (df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
@@ -483,7 +481,7 @@ def get_conditions_for_function(df, func_name, breed_size, lifestage):
 		df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("category")
 		df_func_dr=extract_target_foods(df_dry, func_name, breed_size, lifestage)		
 		
-		maximize = [ transl_nutrs[i] for i in cols  if (df_func_w[i].mean() > df_wet[i].mean() or df_func_dr[i].mean() > df_dry[i].mean())]
+		maximize = [ nutrients_transl[i] for i in main_nutrs  if (df_func_w[i].mean() > df_wet[i].mean() or df_func_dr[i].mean() > df_dry[i].mean())]
 		return  maximize
 
 #--------------------------------------------------------------------------------------------
@@ -720,7 +718,7 @@ if user_breed:
                           st.subheader("Что максимизировать?")
                           selected_maximize = st.multiselect(
                               "Выберите нутриенты для максимизации:",
-                              cols_to_divide,
+                              main_nutrs,
                               default=maximaze_nutrs
                           )
 
@@ -751,7 +749,7 @@ if user_breed:
                                   st.markdown("### 💪 Питательная ценность на 100 г:")
                                   nutrients = {
                                       nutr: round(sum(res.x[i] * food[name][nutr]/100 for i, name in enumerate(ingredient_names)) * 100, 2)
-                                      for nutr in cols_to_divide
+                                      for nutr in main_nutrs
                                   }
                                   for k, v in nutrients.items():
                                       st.write(f"**{k}:** {int(round(v,0))} г")
@@ -775,12 +773,12 @@ if user_breed:
                                 
                                   count_nutr_cont_all = {
                                       nutr: round(sum(amount * food[ingredient][nutr]/100 for ingredient, amount in ingredients_required.items()), 2)
-                                      for nutr in cols_to_divide+other_nutrients+major_minerals+vitamins
+                                      for nutr in main_nutrs+other_nutrients+major_minerals+vitamins
                                   }
 
                                   st.markdown(f"### 💪 Питательная ценность на {int(round(needed_feed_g, 0))} г:")
 
-                                  for k in cols_to_divide:
+                                  for k in main_nutrs:
                                       st.write(f"**{k}:** {int(round(count_nutr_cont_all[k], 0))} г")
                                   st.write(f"****") 
                                 
@@ -806,14 +804,14 @@ if user_breed:
                                         for combo in variants:
                                             values = dict(zip(ingredient_names, combo))
                             
-                                            totals = {nutr: 0.0 for nutr in cols_to_divide}
+                                            totals = {nutr: 0.0 for nutr in main_nutrs}
                                             for i, ingr in enumerate(ingredient_names):
-                                                for nutr in cols_to_divide:
+                                                for nutr in main_nutrs:
                                                     totals[nutr] += values[ingr] * food[ingr][nutr]/100
                             
                                             # Штраф за отклонения от допустимых диапазонов
                                             penalty = 0
-                                            for nutr in cols_to_divide:
+                                            for nutr in main_nutrs:
                                                 val = totals[nutr]
                                                 min_val = nutr_ranges[nutr][0]
                                                 max_val = nutr_ranges[nutr][1]
@@ -837,7 +835,7 @@ if user_breed:
  
                                     
                                     st.markdown("### 💪 Питательная ценность на 100 г:")
-                                    for nutr in cols_to_divide:
+                                    for nutr in main_nutrs:
                                         st.write(f"**{nutr}:** {int(round(totals[nutr], 0))} г")
                                    
                                     en_nutr_100=3.5*totals["Белки"]+8.5*totals["Жиры"]+3.5*totals["Углеводы"]
@@ -859,12 +857,12 @@ if user_breed:
 
                                     count_nutr_cont_all = {
                                       nutr: round(sum(amount * food[ingredient][nutr]/100 for ingredient, amount in ingredients_required.items()), 2)
-                                      for nutr in cols_to_divide+other_nutrients+major_minerals+vitamins }
+                                      for nutr in main_nutrs+other_nutrients+major_minerals+vitamins }
                                     
 
                                     st.markdown(f"### 💪 Питательная ценность на {int(round(needed_feed_g, 0))} г:")
 
-                                    for k in cols_to_divide:
+                                    for k in main_nutrs:
                                       st.write(f"**{k}:** {int(round(count_nutr_cont_all[k],0))} г")
                                     st.write(f"****") 
                                     show_nutr_content(count_nutr_cont_all, other_nutrient_norms)   
