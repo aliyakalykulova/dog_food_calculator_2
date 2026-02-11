@@ -40,15 +40,12 @@ activity_level_cat_1 = ["Пассивный (гуляеет на поводке 
                           "Взрослые, склонные к ожирению"]
 activity_level_cat_2 = ["Пассивный", "Средний", "Активный"]
 
-
-other_nutrients_1=["Зола, г","Клетчатка, г","Холестерин, мг","Сахар общее, г"]
-other_nutrients_2 = ["Холин, мг","Селен, мкг","Йод, мкг","Пантотеновая кислота, мг","Линолевая кислота, г","Фолиевая кислота, мкг","Альфа-линоленовая кислота, г","Арахидоновая кислота, г","ЭПК (50-60%) + ДГК (40-50%), г"]
+other_nutrients_1=['ash_g', 'fiber_g', 'cholesterol_mg', 'total_sugar_g']
+other_nutrients_2 = ['choline_mg', 'selenium_mcg', 'iodine_mcg', 'linoleic_acid_g','alpha_linolenic_acid_g', 'arachidonic_acid_g', 'epa_g', 'dha_g']
 other_nutrients=other_nutrients_1+other_nutrients_2
 
-major_minerals=["Кальций, мг","Медь, мг","Железо, мг","Магний, мг","Фосфор, мг","Калий, мг",
-                "Натрий, мг","Цинк, мг", "Марганец, мг"]
-
-vitamins=[ "Витамин A, мкг","Витамин E, мг","Витамин Д, мкг","Витамин В1 (тиамин), мг","Витамин В2 (Рибофлавин), мг","Витамин В3 (Ниацин), мг","Витамин В6, мг","Витамин В12, мкг"]
+major_minerals=['calcium_mg', 'phosphorus_mg', 'magnesium_mg', 'sodium_mg', 'potassium_mg', 'iron_mg', 'copper_mg', 'zinc_mg', 'manganese_mg']
+vitamins=['vitamin_a_mcg', 'vitamin_e_mg', 'vitamin_d_mcg', 'vitamin_b1_mg', 'vitamin_b2_mg', 'vitamin_b3_mg', 'vitamin_b5_mg', 'vitamin_b6_mg', 'vitamin_b9_mcg', 'vitamin_b12_mcg', 'vitamin_c_mg', 'vitamin_k_mcg']
 
 disorder_keywords = {
     "Inherited musculoskeletal disorders": "muscle joint bone cartilage jd joint mobility glucosamine arthritis cartilage flexibility",
@@ -185,9 +182,12 @@ inner join ingredient_category on ingredient_category.id_category = ingredient.i
                       inner join vitamin on vitamin.id_ingredient=ingredient.id_ingredient
                       inner join vitamin_a_related_compounds on vitamin_a_related_compounds.id_ingredient=ingredient.id_ingredient
                       inner join fatty_acids on fatty_acids.id_ingredient=ingredient.id_ingredient""", conn)
-    return food, disease, standart, ingredirents_df
+    nutrients_transl= pd.read_sql("""SELECT name_in_database, name_ru FROM  nutrients_names """, conn)
+    nutrients_transl = dict(zip(nutrients_transl.iloc[:, 0], nutrients_transl.iloc[:, 1]))
 
-food_df, disease_df, df_standart, ingredirents_df = load_data()
+    return food, disease, standart, ingredirents_df,nutrients_transl
+
+food_df, disease_df, df_standart, ingredirents_df,nutrients_transl = load_data()
 
 proteins=df_standart[df_standart["category_ru"].isin(["Мясо","Яйца и Молочные продукты"])]["name_feed_ingredient"].tolist()
 oils=df_standart[df_standart["category_ru"].isin([ "Масло и жир"])]["name_feed_ingredient"].tolist()
