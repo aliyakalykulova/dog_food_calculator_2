@@ -161,7 +161,30 @@ inner join ingredient on ingredient.id_ingredient	= ingredient_mapping.id_ingred
 inner join ingredients_translation on ingredients_translation.id_ingredient_name=ingredient.id_ingredient_name
 inner join format_ingredients_translation on format_ingredients_translation.id_format_ingredient = ingredient.id_format_ingredient
 inner join ingredient_category on ingredient_category.id_category = ingredient.id_category""", conn)
-    ingredirents_df = pd.read_csv("food_ingrediets_2025.csv")
+
+	ingredirents_df =  pd.read_sql("""SELECT format_ingredient, ingredients_translation.name_ru as name_ingredient_ru , format_ingredients_translation.name_ru as format_ingredient_ru, ingredient_category.name_ru as category_ru, 
+
+                      ingredients_translation.name_ru || " — " || format_ingredients_translation.name_ru AS ingredient_format_cat,
+
+                      calories_kcal, moisture_per, protein_per, carbohydrate_per,fats_per, ash_g, fiber_g, cholesterol_mg, total_sugar_g,
+                      
+                      calcium_mg, phosphorus_mg, magnesium_mg, sodium_mg, potassium_mg, iron_mg, copper_mg, zinc_mg, manganese_mg, selenium_mcg, iodine_mcg, choline_mg,
+                      
+                      vitamin_a_mcg,  vitamin_e_mg,  vitamin_d_mcg, vitamin_b1_mg, vitamin_b2_mg,vitamin_b3_mg, 
+                      vitamin_b5_mg, vitamin_b6_mg,vitamin_b9_mcg,vitamin_b12_mcg, vitamin_c_mg, vitamin_k_mcg,
+                      alpha_carotene_mcg,beta_carotene_mcg, beta_cryptoxanthin_mcg, lutein_zeaxanthin_mcg, lycopene_mcg, retinol_mcg, 
+                      linoleic_acid_g, alpha_linolenic_acid_g , arachidonic_acid_g ,epa_g, dha_g
+                      
+                      FROM  ingredient
+                      inner join ingredients_translation on ingredient.id_ingredient_name=ingredients_translation.id_ingredient_name
+                      inner join format_ingredients_translation on format_ingredients_translation.id_format_ingredient=ingredient.id_format_ingredient
+                      inner join ingredient_category on ingredient_category.id_category= ingredient.id_category
+
+                      inner join nutrient_macro on nutrient_macro.id_ingredient=ingredient.id_ingredient
+                      inner join nutrient_micro on nutrient_micro.id_ingredient=ingredient.id_ingredient
+                      inner join vitamin on vitamin.id_ingredient=ingredient.id_ingredient
+                      inner join vitamin_a_related_compounds on vitamin_a_related_compounds.id_ingredient=ingredient.id_ingredient
+                      inner join fatty_acids on fatty_acids.id_ingredient=ingredient.id_ingredient""", conn)
     return food, disease, standart, ingredirents_df
 
 food_df, disease_df, df_standart, ingredirents_df = load_data()
@@ -562,7 +585,6 @@ if user_breed:
                       ingredirents_df[cols_to_divide+other_nutrients+major_minerals+vitamins] = ingredirents_df[cols_to_divide+other_nutrients+major_minerals+vitamins]
                       ingredirents_df['ингредиент и описание'] = ingredirents_df['Ингредиенты'] + ' — ' + ingredirents_df['Описание']
                       
-
                       proteins=ingredirents_df[ingredirents_df["category_ru"].isin(["Яйца и Молочные продукты", "Мясо"])]["ингредиент и описание"].tolist()
                       oils=ingredirents_df[ingredirents_df["category_ru"].isin([ "Масло и жир"])]["ингредиент и описание"].tolist()
                       carbonates_cer=ingredirents_df[ingredirents_df["category_ru"].isin(["Крупы"])]["ингредиент и описание"].tolist()
