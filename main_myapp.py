@@ -182,11 +182,10 @@ inner join ingredient_category on ingredient_category.id_category = ingredient.i
                       inner join vitamin_a_related_compounds on vitamin_a_related_compounds.id_ingredient=ingredient.id_ingredient
                       inner join fatty_acids on fatty_acids.id_ingredient=ingredient.id_ingredient""", conn)
     nutrients_transl= pd.read_sql("""SELECT name_in_database, name_ru FROM  nutrients_names """, conn)
-    nutrients_transl = dict(zip(nutrients_transl.iloc[:, 0], nutrients_transl.iloc[:, 1]))
 
     return food, disease, standart, ingredirents_df,nutrients_transl
 
-food_df, disease_df, df_standart, ingredirents_df,nutrients_transl = load_data()
+food_df, disease_df, df_standart, ingredirents_df,nutrients_transl= load_data()
 
 proteins=df_standart[df_standart["category_ru"].isin(["Мясо","Яйца и Молочные продукты"])]["name_feed_ingredient"].tolist()
 oils=df_standart[df_standart["category_ru"].isin([ "Масло и жир"])]["name_feed_ingredient"].tolist()
@@ -717,18 +716,19 @@ if user_breed:
                           st.subheader("Что максимизировать?")
                           selected_maximize = st.multiselect(
                               "Выберите нутриенты для максимизации:",
-                              main_nutrs,
-                              default=maximaze_nutrs
+                             [ nutrients_transl.loc[nutrients_transl["name_in_database"] == nutr,"name_ru"].iloc[0].split(",")[0] for nutr in main_nutrs],
+                              default=[ nutrients_transl.loc[nutrients_transl["name_in_database"] == nutr,"name_ru"].iloc[0].split(",")[0] for nutr in maximaze_nutrs] 
                           )
 
                         # Инициализация предыдущего значения
                           if "prev_selected_maximize" not in st.session_state:
-                            st.session_state.prev_selected_maximize = ['Влага', 'Белки']
+                            st.session_state.prev_selected_maximize = [nutrients_transl.loc[nutrients_transl["name_in_database"] == nutr,"name_ru"].iloc[0].split(",")[0] for nutr in main_nutrs]
                         
                         # Проверка изменений
                           if selected_maximize != st.session_state.prev_selected_maximize:
                             st.session_state.show_result_2 = False
                             st.session_state.prev_selected_maximize = selected_maximize.copy()
+						  selected_maximize=[nutrients_transl.loc[nutrients_transl["name_ru"].str.contains(nutr, na=False),"name_in_database"].iloc[0] for nutr in main_nutrs]
                           f = [-sum(food[i][nutr] for nutr in selected_maximize) for i in ingredient_names]
 
 
