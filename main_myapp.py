@@ -22,7 +22,6 @@ from kcal_calculate import bar_print
 from kcal_calculate import get_other_nutrient_norms
 from kcal_calculate import show_nutr_content
 from kcal_calculate import protein_need_calc
-from kcal_calculate import classify_breed_size
 import sqlite3
 
 # все спсики-------------------------------------------------------------------------
@@ -33,7 +32,8 @@ rep_status_types=["Нет", "Щенность (беременность)", "Пе
 berem_time_types=["первые 4 недедели беременности","последние 5 недель беременности"]
 lact_time_types=["1 неделя","2 неделя","3 неделя","4 неделя"]
 age_category_types=["puppy","adult","senior"]
-size_types=["Мелкие",  "Средние",  "Крупные", "Очень крупные"]
+size_types=["small",  "medium",  "large"]
+
 activity_level_cat_1 = ["Пассивный (гуляеет на поводке менее 1ч/день)", "Средний1 (1-3ч/день, низкая активность)",
                           "Средний2 (1-3ч/день, высокая активность)", "Активный (3-6ч/день, рабочие собаки, например, овчарки)",
                           "Высокая активность в экстремальных условиях (гонки на собачьих упряжках со скоростью 168 км/день в условиях сильного холода)",
@@ -87,7 +87,6 @@ transl_dis={
 	"food sensitivity":["food sensitivity"]
 }
 
-transl_size={"Мелкие":"small",  "Средние":"medium", 	"Крупные":"large", "Очень крупные":"large"}
 
 
 
@@ -143,7 +142,6 @@ GROUP BY dog_food.id_dog_food""", conn)
                 inner join disease_disorder on disease.id_disease= disease_disorder.id_disease
                 inner join disorder on disorder.id_disorder=disease_disorder.id_disorder""", conn)
 	
-    disease["breed_size_category"] = disease.apply(classify_breed_size, axis=1)
     conn=sqlite3.connect("ingredients.db")
     standart = pd.read_sql("""SELECT name_feed_ingredient,  ingredients_translation.name_ru || " — " || format_ingredients_translation.name_ru AS ingredient_full_ru, ingredient_category.name_ru as category_ru     
 FROM  ingredient_mapping
@@ -423,8 +421,8 @@ min_weight = disease_df.loc[disease_df["name_breed"] == user_breed, "min_weight"
 max_weight = disease_df.loc[disease_df["name_breed"] == user_breed, "max_weight"].values
 avg_wight=(max_weight[0]+min_weight[0])/2
 
-size_categ = size_category(avg_wight)
-age_type_categ = age_type_category(size_categ, age ,age_metric)
+breed_size = size_category(avg_wight)
+age_type_categ = age_type_category(breed_size, age ,age_metric)
 
 if age!=st.session_state.age_sel or age_metric!=st.session_state.age_metric or weight != st.session_state.weight_sel:
     st.session_state.age_sel=age
@@ -482,7 +480,6 @@ def get_conditions_for_function(df, func_name, breed_size, lifestage):
 if user_breed:
     info = disease_df[disease_df["name_breed"] == user_breed]
     if not info.empty:
-        breed_size = info["breed_size_category"].values[0]
         disorders = info["name_disease"].unique().tolist()+["food sensitivity","weight management"]+[i for i in  ["aging care","puppy care","adult care"] if age_type_categ in i]
         selected_disorder = st.selectbox("Заболевание:", disorders)
         match = info.loc[info["name_disease"] == selected_disorder, "name_disorder"]
@@ -672,7 +669,7 @@ if user_breed:
                           # --- Ограничения по нутриентам ---
                           st.subheader("Ограничения по нутриентам:")
                           nutr_ranges = {}
-                          maximaze_nutrs = get_conditions_for_function(food_df, transl_dis[disorder_type], transl_size[size_categ], age_type_categ)
+                          maximaze_nutrs = get_conditions_for_function(food_df, transl_dis[disorder_type], breed_size, age_type_categ)
 						  
                           needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)					  
                           nutr_ranges['moisture_per'] = st.slider(f"{'Влага'}", 0, 100, (int(nutrient_preds["moisture"]-5), int(nutrient_preds["moisture"]+5)))
