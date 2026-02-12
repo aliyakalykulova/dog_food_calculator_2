@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.sparse import csr_matrix
 import sqlite3
+import pandas as pd
+
 
 
 metrics_age_types=["в годах","в месецах"]
