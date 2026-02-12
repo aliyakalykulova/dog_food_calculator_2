@@ -24,8 +24,9 @@ from kcal_calculate import get_other_nutrient_norms
 from kcal_calculate import show_nutr_content
 from kcal_calculate import protein_need_calc
 from scipy.sparse import csr_matrix
-# все спсики-------------------------------------------------------------------------
+from kcal_calculate import get_conditions_for_function
 
+# все спсики-------------------------------------------------------------------------
 metrics_age_types=["в годах","в месецах"]
 gender_types=["Самец", "Самка"]
 rep_status_types=["Нет", "Щенность (беременность)", "Период лактации"]
@@ -322,7 +323,6 @@ if "show_result_2" not in st.session_state:
 if "select_reproductive_status" not in st.session_state:
     st.session_state.select_reproductive_status = None
 
-
 if "select_gender" not in st.session_state:
     st.session_state.select_gender = None
 if "show_res_berem_time" not in st.session_state:
@@ -446,28 +446,6 @@ if age_type_categ==age_category_types[2]:
         st.session_state.show_result_1 = False
         st.session_state.show_result_2 = False
 
-#------------------------ выбор функции максимизации и нутриентных ограничен
-
-
-def extract_target_foods(df, func_name, breed_size, lifestage):
-    df_func = df[(df["category"].isin(func_name)) & (df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
-    if len(df_func) == 0:
-        df_func = df[(df["category"].isin(func_name)) & (df["life_stage"] == lifestage)]
-    if len(df_func) == 0:
-        df_func = df[df["category"].isin(func_name)]
-    if len(df_func) == 0:
-        df_func = df[(df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
-    return df_func
-
-def get_conditions_for_function(df, func_name, breed_size, lifestage):
-		df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("category")
-		df_func_w = extract_target_foods(df_wet, func_name, breed_size, lifestage)
-		
-		df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("category")
-		df_func_dr=extract_target_foods(df_dry, func_name, breed_size, lifestage)		
-		
-		maximize = [ i for i in main_nutrs  if (df_func_w[i.replace("_per","")].mean() > df_wet[i.replace("_per","")].mean() or df_func_dr[i.replace("_per","")].mean() > df_dry[i.replace("_per","")].mean())]
-		return  maximize
 
 #--------------------------------------------------------------------------------------------
 # 2 этап настройка условий рецепта  ---------------------------------------------------------
