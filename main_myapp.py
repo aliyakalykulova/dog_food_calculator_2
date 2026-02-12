@@ -20,7 +20,6 @@ from kcal_calculate import kcal_calculate
 from kcal_calculate import size_category
 from kcal_calculate import age_type_category
 from kcal_calculate import bar_print
-from kcal_calculate import get_other_nutrient_norms
 from kcal_calculate import show_nutr_content
 from kcal_calculate import protein_need_calc
 from scipy.sparse import csr_matrix
@@ -33,7 +32,7 @@ from kcal_calculate import build_categorical_encoder
 from kcal_calculate import combine_features
 from kcal_calculate import train_ingredient_models
 from kcal_calculate import train_nutrient_models
-
+from kcal_calculate import show_sidebar
 # все спсики-------------------------------------------------------------------------
 metrics_age_types=["в годах","в месецах"]
 gender_types=["Самец", "Самка"]
@@ -57,53 +56,10 @@ other_nutrients=other_nutrients_1+other_nutrients_2
 major_minerals=['calcium_mg', 'phosphorus_mg', 'magnesium_mg', 'sodium_mg', 'potassium_mg', 'iron_mg', 'copper_mg', 'zinc_mg', 'manganese_mg']
 vitamins=['vitamin_a_mcg', 'vitamin_e_mg', 'vitamin_d_mcg', 'vitamin_b1_mg', 'vitamin_b2_mg', 'vitamin_b3_mg', 'vitamin_b5_mg', 'vitamin_b6_mg', 'vitamin_b9_mcg', 'vitamin_b12_mcg', 'vitamin_c_mg', 'vitamin_k_mcg']
 
-disorder_keywords = {
-    "Inherited musculoskeletal disorders": "muscle joint bone cartilage jd joint mobility glucosamine arthritis cartilage flexibility",
-    "Inherited gastrointestinal disorders": "digestive digestion stool food sensitivity hypoallergenic stomach digest stomach bowel sensitive diarrhea gut ibs",
-    "Inherited endocrine disorders": "thyroid metabolism weight diabetes insulin hormone glucose",
-    "Inherited eye disorders": "vision eye retina cataract antioxidant sight ocular",
-    "Inherited nervous system disorders": "nervous system stress disrupted sleep brain brain seizure cognitive nerve neuro neurological cognition",
-    "Inherited cardiovascular disorders": "heart hd heart cardiac circulation omega-3 blood pressure vascular",
-    "Inherited skin disorders": "skin coat allergy skin allergy itch coat omega-6 dermatitis eczema flaky",
-    "Inherited immune disorders": "immune defense resistance inflammatory autoimmune",
-    "Inherited urinary and reproductive disorders": " urinary bladder stones urinary bladder kidney renal urine reproductive",
-    "Inherited respiratory disorders": "breath respiratory airway lung cough breathing nasal",
-    "Inherited blood disorders": "anemia blood iron hemoglobin platelets clotting hemophilia",
-	"aging care":"aging senior mature",
-	"puppy care":"puppy grow start",
-	"adult care":"adult immune optimal delicious",
-	"weight management":"weight management overweight",
-	"food sensitivity":"food sensitivity hypoallergenic stomach"	
-}
 
-
-transl_dis={
- "Inherited musculoskeletal disorders": ["musculoskeletal and joint care"] ,
-    "Inherited gastrointestinal disorders": ["digestive care","food sensitivity"],
-    "Inherited endocrine disorders": ["weight management"],
-    "Inherited eye disorders": ["nervous system care and stress"],
-    "Inherited nervous system disorders": ["nervous system care and stress"],
-    "Inherited cardiovascular disorders": ["heart care"],
-    "Inherited skin disorders": ["skin health"],
-    "Inherited immune disorders": ["aging care","puppy care","adult care"]	,
-    "Inherited urinary and reproductive disorders": ["urinary care"],
-    "Inherited respiratory disorders": ["aging care","puppy care","adult care"]	,
-    "Inherited blood disorders" : ["aging care","puppy care","adult care"],
-	"aging care":["aging care"],
-	"puppy care":["puppy care"],
-	"adult care":["adult care"],
-	"weight management":["weight management"],
-	"food sensitivity":["food sensitivity"]
-}
 
 
 food_df, disease_df, df_standart, ingredirents_df,nutrients_transl= load_data()
-
-proteins=df_standart[df_standart["category_ru"].isin(["Мясо","Яйца и Молочные продукты"])]["name_feed_ingredient"].tolist()
-oils=df_standart[df_standart["category_ru"].isin([ "Масло и жир"])]["name_feed_ingredient"].tolist()
-carbonates_cer=df_standart[df_standart["category_ru"].isin(["Крупы"])]["name_feed_ingredient"].tolist()
-carbonates_veg=df_standart[df_standart["category_ru"].isin(["Зелень и специи","Овощи и фрукты"])]["name_feed_ingredient"].tolist()
-water=["water"]
 
 vectorizer, svd, X_text_reduced = build_text_pipeline(food_df["description"], n_components=100)
 encoder, X_categorical = build_categorical_encoder(food_df)
@@ -187,17 +143,10 @@ elif st.session_state.select_reproductive_status==rep_status_types[2] and st.ses
                    st.session_state.show_result_1 = False
                    st.session_state.show_result_2 = False 
               
-
 if "step" not in st.session_state:
     st.session_state.step = 0  # 0 — начальное, 1 — после генерации, 2 — после расчета
 
-# -----------------------------------
-# 8) STREAMLIT UI LAYOUT
-# -----------------------------------
-
-st.sidebar.title("🐶 Smart Dog Diet Advisor")
-st.sidebar.write("Select breed + disorder → get personalized food suggestions")
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/616/616408.png", width=80)
+show_sidebar()
 
 if "select1" not in st.session_state:
     st.session_state.select1 = None
@@ -275,72 +224,18 @@ if user_breed:
         if st.button("Составить рекомендации"):
             st.session_state.show_result_1 = True
         if st.session_state.show_result_1:
-            kcal, formula, page =kcal_calculate(st.session_state.select_reproductive_status, st.session_state.show_res_berem_time, st.session_state.show_res_num_pup ,  st.session_state.show_res_lact_time, 
+            kcal =kcal_calculate(st.session_state.select_reproductive_status, st.session_state.show_res_berem_time, st.session_state.show_res_num_pup ,  st.session_state.show_res_lact_time, 
                                 age_type_categ, st.session_state.weight_sel, avg_wight,  st.session_state.activity_level_sel, user_breed, age)
-            
-            st.markdown(f"Было рассчитано по формуле")
-            st.latex(formula)
-
-            url = "https://europeanpetfood.org/wp-content/uploads/2024/09/FEDIAF-Nutritional-Guidelines_2024.pdf#page=" + page
-            st.markdown(f"[Подробнее]({url})")
-            if kcal<0:
-              kcal=0
             metobolic_energy = st.number_input("Киллокаллории в день", min_value=0.0, step=0.1,  value=round(kcal,1) )
+			
             if st.session_state.kkal_sel!=metobolic_energy:
                st.session_state.kkal_sel=metobolic_energy
                st.session_state.show_result_1 = True
                st.session_state.show_result_2 = False
-              
-            other_nutrient_norms=get_other_nutrient_norms(st.session_state.kkal_sel, age_type_categ, st.session_state.weight_sel, st.session_state.select_reproductive_status)
-                                                          
-            # Build query vector
-            keywords = disorder_keywords.get(disorder_type, selected_disorder).lower()
-            kw_tfidf = vectorizer.transform([keywords])
-            kw_reduced = svd.transform(kw_tfidf)
 
-            # One-hot for (breed_size, age_type_categ)
-            cat_vec = encoder.transform([[breed_size, age_type_categ]])
-            kw_combined = hstack([csr_matrix(kw_reduced), cat_vec])
-
-            # Rank ingredients
-            ing_scores = {
-                ing: clf.decision_function(kw_combined)[0]
-                for ing, clf in ingredient_models.items()
-            }
-            top_ings = sorted(ing_scores.items(), key=lambda x: x[1], reverse=True)
-
-            prot=sorted([i for i in top_ings if i[0] in proteins], key=lambda x: x[1], reverse=True)[0][0]
-            prot=df_standart[df_standart["name_feed_ingredient"]==prot]["ingredient_full_ru"].tolist()
-
-            carb_cer=sorted([i for i in top_ings if i[0] in carbonates_cer and i[0]!="flaxseed"], key=lambda x: x[1], reverse=True)[0][0]
-            carb_cer=df_standart[df_standart["name_feed_ingredient"]==carb_cer]["ingredient_full_ru"].tolist()
-
-            carb_veg=sorted([i for i in top_ings if i[0] in carbonates_veg], key=lambda x: x[1], reverse=True)[0][0]
-            carb_veg=df_standart[df_standart["name_feed_ingredient"]==carb_veg]["ingredient_full_ru"].tolist()
-
-            fat=sorted([i for i in top_ings if i[0] in oils], key=lambda x: x[1], reverse=True)[0][0]
-            fat=df_standart[df_standart["name_feed_ingredient"]==fat]["ingredient_full_ru"].tolist()
-            wat=df_standart[df_standart["name_feed_ingredient"].isin(water)]["ingredient_full_ru"].tolist()
-			
-            ingredients_finish = [i for i in prot+carb_cer+carb_veg+fat+wat if len(i)>0]
-
-            kw_tfidf = vectorizer_wet.transform([keywords])
-            kw_reduced = svd_wet.transform(kw_tfidf)
-            cat_vec = encoder_wet.transform([[breed_size, age_type_categ]])
-            cat_vec = apply_category_masks(cat_vec,encoder_wet)
-            kw_combined = hstack([csr_matrix(kw_reduced), cat_vec])
-            nutrient_preds = {}
-            for nut, model in ridge_models.items():
-                      pred = model.predict(kw_combined)[0]
-                      sc = scalers.get(nut)
-                      if sc:
-                        pred = sc.inverse_transform([[pred]])[0][0]
-                      nutrient_preds[nut] = float(round(pred, 2))
-			
-            # Display
-            st.subheader("🌿 Рекомендуемые ингредиенты")
-            for ing in ingredients_finish:
-                st.write("• " + ing)
+			ingredients_finish=ingredient_recomendation(ingredient_models,breed_size, age_type_categ,disorder_type, selected_disorder,vectorizer,svd,encoder, df_standart)
+            nutrient_preds = nutrients_recomendation(vectorizer_wet,keywords,svd_wet,encoder_wet, breed_size, age_type_categ, ridge_models,scalers )
+  
             if len(ingredients_finish)>0:               
 
                       for col in main_nutrs+other_nutrients+major_minerals+vitamins:
@@ -449,7 +344,7 @@ if user_breed:
                           # --- Ограничения по нутриентам ---
                           st.subheader("Ограничения по нутриентам:")
                           nutr_ranges = {}
-                          maximaze_nutrs = get_conditions_for_function(food_df, transl_dis[disorder_type], breed_size, age_type_categ)
+                          maximaze_nutrs = get_conditions_for_function(food_df, disorder_type, breed_size, age_type_categ)
 						  
                           needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)					  
                           nutr_ranges['moisture_per'] = st.slider(f"{'Влага'}", 0, 100, (int(nutrient_preds["moisture"]-5), int(nutrient_preds["moisture"]+5)))
@@ -553,7 +448,7 @@ if user_breed:
                                       st.write(f"**{k_trl}:** {int(round(count_nutr_cont_all[k], 0))} г")
                                   st.write(f"****") 
                                 
-                                  show_nutr_content(count_nutr_cont_all, other_nutrient_norms,nutrients_transl)    
+                                  show_nutr_content(count_nutr_cont_all,nutrients_transl, st.session_state.kkal_sel, age_type_categ, st.session_state.weight_sel, st.session_state.select_reproductive_status)    
                                 
                             
                               else:
@@ -638,7 +533,7 @@ if user_breed:
                                       k_trl=nutrients_transl.loc[nutrients_transl["name_in_database"] == k,"name_ru"].iloc[0].split(",")[0]
                                       st.write(f"**{k_trl}:** {int(round(count_nutr_cont_all[k],0))} г")
                                     st.write(f"****") 
-                                    show_nutr_content(count_nutr_cont_all, other_nutrient_norms,nutrients_transl)   
+                                    show_nutr_content(count_nutr_cont_all,nutrients_transl, st.session_state.kkal_sel, age_type_categ, st.session_state.weight_sel, st.session_state.select_reproductive_status)   
 
 
 
