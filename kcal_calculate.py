@@ -93,7 +93,7 @@ def show_nutr_content(count_nutr_cont_all, other_nutrient_norms, nutrients_trans
 
                                   st.markdown("### Необходимо добавить")
                                   for name,amount in count_nutr_cont_all.items():
-                                    if name_n in other_nutrient_norms:
+                                    if name in other_nutrient_norms:
                                       diff=other_nutrient_norms[name_n] - amount
                                       if diff>0:
                                          name_n=nutrients_transl.loc[nutrients_transl["name_in_database"] == name_n,"name_ru"].iloc[0].split(",") 
