@@ -911,7 +911,7 @@ if user_breed:
                                         ax2.plot(i, val, 'o', color='#FF4B4B')
                                     
                                     ax2.set_xticks(range(len(nutrients)))
-                                    ax2.set_xticklabels(nutrients, rotation=0)
+                                    ax2.set_xticklabels([nutrients_transl.loc[nutrients_transl["name_in_database"] == nutr,"name_ru"].iloc[0].split(",")[0] for nutr in  nutrients], rotation=0)
                                     ax2.set_ylabel("Значение")
                                     ax2.set_title("Питательные вещества: значения и допустимые границы")
                                     ax2.set_ylim(0, 100)
