@@ -32,7 +32,7 @@ gender_types=["Самец", "Самка"]
 rep_status_types=["Нет", "Щенность (беременность)", "Период лактации"]
 berem_time_types=["первые 4 недедели беременности","последние 5 недель беременности"]
 lact_time_types=["1 неделя","2 неделя","3 неделя","4 неделя"]
-age_category_types=["Щенки","Взрослые","Пожилые"]
+age_category_types=["puppy","adult","senior"]
 size_types=["Мелкие",  "Средние",  "Крупные", "Очень крупные"]
 activity_level_cat_1 = ["Пассивный (гуляеет на поводке менее 1ч/день)", "Средний1 (1-3ч/день, низкая активность)",
                           "Средний2 (1-3ч/день, высокая активность)", "Активный (3-6ч/день, рабочие собаки, например, овчарки)",
@@ -89,15 +89,9 @@ transl_dis={
 
 transl_size={"Мелкие":"small",  "Средние":"medium", 	"Крупные":"large", "Очень крупные":"large"}
 
-transl_age={"Щенки":"puppy","Взрослые":"adult","Пожилые":"senior"}
 
-transl_nutrs={
-	"moisture":'Влага', 
-    "protein":'Белки', 
-    "fat":'Жиры', 
-    "carbohydrate":'Углеводы'}
+
 # загрузка и подготовка датасетов-------------------------------------------------------------------------------------
-
 from scipy.sparse import csr_matrix
 import numpy as np
 
@@ -489,7 +483,7 @@ if user_breed:
     info = disease_df[disease_df["name_breed"] == user_breed]
     if not info.empty:
         breed_size = info["breed_size_category"].values[0]
-        disorders = info["name_disease"].unique().tolist()+["food sensitivity","weight management"]+[i for i in  ["aging care","puppy care","adult care"] if transl_age[age_type_categ] in i]
+        disorders = info["name_disease"].unique().tolist()+["food sensitivity","weight management"]+[i for i in  ["aging care","puppy care","adult care"] if age_type_categ in i]
         selected_disorder = st.selectbox("Заболевание:", disorders)
         match = info.loc[info["name_disease"] == selected_disorder, "name_disorder"]
         disorder_type = match.iloc[0] if not match.empty else selected_disorder
@@ -555,7 +549,7 @@ if user_breed:
 
             kw_tfidf = vectorizer_wet.transform([keywords])
             kw_reduced = svd_wet.transform(kw_tfidf)
-            cat_vec = encoder_wet.transform([[breed_size, transl_age[age_type_categ]]])
+            cat_vec = encoder_wet.transform([[breed_size, age_type_categ]])
             cat_vec = apply_category_masks(cat_vec,encoder_wet)
             kw_combined = hstack([csr_matrix(kw_reduced), cat_vec])
             nutrient_preds = {}
@@ -678,7 +672,7 @@ if user_breed:
                           # --- Ограничения по нутриентам ---
                           st.subheader("Ограничения по нутриентам:")
                           nutr_ranges = {}
-                          maximaze_nutrs = get_conditions_for_function(food_df, transl_dis[disorder_type], transl_size[size_categ], transl_age[age_type_categ])
+                          maximaze_nutrs = get_conditions_for_function(food_df, transl_dis[disorder_type], transl_size[size_categ], age_type_categ)
 						  
                           needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)					  
                           nutr_ranges['moisture_per'] = st.slider(f"{'Влага'}", 0, 100, (int(nutrient_preds["moisture"]-5), int(nutrient_preds["moisture"]+5)))
