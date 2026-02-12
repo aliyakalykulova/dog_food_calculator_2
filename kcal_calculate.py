@@ -87,7 +87,6 @@ def show_nutr_content(count_nutr_cont_all, other_nutrient_norms, nutrients_trans
                                               nutris = vitamins[i]
                                               nutr_text=nutrients_transl.loc[nutrients_transl["name_in_database"] == nutris,"name_ru"].iloc[0].split(",") 
                                               emg = nutr_text[-1].strip() if len(nutr_text)>1 and "%" not in nutr_text[-1] else "g"
-                                              st.write(nutr_text[0])
                                               norma = other_nutrient_norms[nutris]
                                               st.pyplot(bar_print(norma, count_nutr_cont_all.get(nutris, ''), nutr_text[0]+", "+ emg, str(emg)))
 
