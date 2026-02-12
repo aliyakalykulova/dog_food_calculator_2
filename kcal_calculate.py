@@ -1,6 +1,8 @@
 import textwrap
 import streamlit as st
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy.sparse import csr_matrix
 
 metrics_age_types=["в годах","в месецах"]
 gender_types=["Самец", "Самка"]
@@ -22,6 +24,115 @@ other_nutrients=other_nutrients_1+other_nutrients_2
 major_minerals=['calcium_mg', 'phosphorus_mg', 'magnesium_mg', 'sodium_mg', 'potassium_mg', 'iron_mg', 'copper_mg', 'zinc_mg', 'manganese_mg']
 vitamins=['vitamin_a_mcg', 'vitamin_e_mg', 'vitamin_d_mcg', 'vitamin_b1_mg', 'vitamin_b2_mg', 'vitamin_b3_mg', 'vitamin_b5_mg', 'vitamin_b6_mg', 'vitamin_b9_mcg', 'vitamin_b12_mcg']
 
+
+
+@st.cache_data(show_spinner=False)
+def load_data():
+    conn = sqlite3.connect("pet_food.db")
+    food=pd.read_sql("""SELECT name_product, description, ingredients, GROUP_CONCAT(category.category) AS category,
+food_form.food_form,  breed_size.breed_size,  life_stage.life_stage, 
+moisture, protein, fat as fats, carbohydrate FROM dog_food 
+INNER JOIN dog_food_characteristics ON dog_food_characteristics.id_dog_food = dog_food.id_dog_food 
+INNER JOIN breed_size ON dog_food_characteristics.id_breed_size = breed_size.id_breed_size
+INNER JOIN life_stage ON dog_food_characteristics.id_life_stage = life_stage.id_life_stage 
+INNER JOIN food_form ON dog_food_characteristics.id_food_form = food_form.id_food_form 
+INNER JOIN food_category_connect ON food_category_connect.id_dog_food = dog_food.id_dog_food 
+INNER JOIN category ON food_category_connect.id_category = category.id_category 
+INNER JOIN nutrient_macro ON nutrient_macro.id_dog_food = dog_food.id_dog_food 
+GROUP BY dog_food.id_dog_food""", conn)
+	
+    food["category"] = (food["category"].astype(str).str.split(", "))
+
+    conn= sqlite3.connect("dog_breed_disease.db")
+    disease = pd.read_sql("""SELECT breed_name.name_ru as name_breed,  min_weight, max_weight, disease.name_ru as name_disease, name_disorder
+                FROM breed 
+                inner join breed_name on breed.id_breed = breed_name.id_breed
+                inner join breed_disease on breed.id_breed = breed_disease.id_breed
+                inner join disease on disease.id_disease= breed_disease.id_disease
+                inner join disease_disorder on disease.id_disease= disease_disorder.id_disease
+                inner join disorder on disorder.id_disorder=disease_disorder.id_disorder""", conn)
+	
+    conn=sqlite3.connect("ingredients.db")
+    standart = pd.read_sql("""SELECT name_feed_ingredient,  ingredients_translation.name_ru || " — " || format_ingredients_translation.name_ru AS ingredient_full_ru, ingredient_category.name_ru as category_ru     
+FROM  ingredient_mapping
+inner join ingredient on ingredient.id_ingredient	= ingredient_mapping.id_ingredient
+inner join ingredients_translation on ingredients_translation.id_ingredient_name=ingredient.id_ingredient_name
+inner join format_ingredients_translation on format_ingredients_translation.id_format_ingredient = ingredient.id_format_ingredient
+inner join ingredient_category on ingredient_category.id_category = ingredient.id_category""", conn)
+
+    ingredirents_df =  pd.read_sql("""SELECT format_ingredient, ingredients_translation.name_ru as name_ingredient_ru , format_ingredients_translation.name_ru as format_ingredient_ru, ingredient_category.name_ru as category_ru, 
+
+                      ingredients_translation.name_ru || " — " || format_ingredients_translation.name_ru AS ingredient_format_cat,
+
+                      calories_kcal, moisture_per, protein_per, carbohydrate_per,fats_per, ash_g, fiber_g, cholesterol_mg, total_sugar_g,
+                      
+                      calcium_mg, phosphorus_mg, magnesium_mg, sodium_mg, potassium_mg, iron_mg, copper_mg, zinc_mg, manganese_mg, selenium_mcg, iodine_mcg, choline_mg,
+                      
+                      vitamin_a_mcg,  vitamin_e_mg,  vitamin_d_mcg, vitamin_b1_mg, vitamin_b2_mg,vitamin_b3_mg, 
+                      vitamin_b5_mg, vitamin_b6_mg,vitamin_b9_mcg,vitamin_b12_mcg, vitamin_c_mg, vitamin_k_mcg,
+                      alpha_carotene_mcg,beta_carotene_mcg, beta_cryptoxanthin_mcg, lutein_zeaxanthin_mcg, lycopene_mcg, retinol_mcg, 
+                      linoleic_acid_g, alpha_linolenic_acid_g , arachidonic_acid_g ,epa_g, dha_g
+                      
+                      FROM  ingredient
+                      inner join ingredients_translation on ingredient.id_ingredient_name=ingredients_translation.id_ingredient_name
+                      inner join format_ingredients_translation on format_ingredients_translation.id_format_ingredient=ingredient.id_format_ingredient
+                      inner join ingredient_category on ingredient_category.id_category= ingredient.id_category
+
+                      inner join nutrient_macro on nutrient_macro.id_ingredient=ingredient.id_ingredient
+                      inner join nutrient_micro on nutrient_micro.id_ingredient=ingredient.id_ingredient
+                      inner join vitamin on vitamin.id_ingredient=ingredient.id_ingredient
+                      inner join vitamin_a_related_compounds on vitamin_a_related_compounds.id_ingredient=ingredient.id_ingredient
+                      inner join fatty_acids on fatty_acids.id_ingredient=ingredient.id_ingredient""", conn)
+    nutrients_transl= pd.read_sql("""SELECT name_in_database, name_ru FROM  nutrients_names """, conn)
+
+    return food, disease, standart, ingredirents_df,nutrients_transl
+  
+def apply_category_masks(X, encoder):
+    X = X.toarray()
+    feature_names = encoder.get_feature_names_out()
+
+    idx = {name: i for i, name in enumerate(feature_names)}
+
+    # пример: breed_size = "-"
+    if "breed_size_-" in idx:
+        mask = X[:, idx["breed_size_-"]] == 1
+        for k in ["breed_size_s", "breed_size_m", "breed_size_l"]:
+            if k in idx:
+                X[mask, idx[k]] = 1
+
+    # life_stage = "-"
+    if "life_stage_-" in idx:
+        mask = X[:, idx["life_stage_-"]] == 1
+        for k in ["life_stage_puppy", "life_stage_adult", "life_stage_senior"]:
+            if k in idx:
+                X[mask, idx[k]] = 1
+
+    return csr_matrix(X)
+
+
+#------------------------ выбор функции максимизации и нутриентных ограничен
+def extract_target_foods(df, func_name, breed_size, lifestage):
+    df_func = df[(df["category"].isin(func_name)) & (df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
+    if len(df_func) == 0:
+        df_func = df[(df["category"].isin(func_name)) & (df["life_stage"] == lifestage)]
+    if len(df_func) == 0:
+        df_func = df[df["category"].isin(func_name)]
+    if len(df_func) == 0:
+        df_func = df[(df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
+    return df_func
+
+def get_conditions_for_function(df, func_name, breed_size, lifestage):
+		df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("category")
+		df_func_w = extract_target_foods(df_wet, func_name, breed_size, lifestage)
+		
+		df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("category")
+		df_func_dr=extract_target_foods(df_dry, func_name, breed_size, lifestage)		
+		
+		maximize = [ i for i in main_nutrs  if (df_func_w[i.replace("_per","")].mean() > df_wet[i.replace("_per","")].mean() or df_func_dr[i.replace("_per","")].mean() > df_dry[i.replace("_per","")].mean())]
+		return  maximize
+
+
+
 def protein_need_calc(kkal, age_type_categ,  w, reproductive_status, age, age_mesuare_type):
    protein_n=0
    if age_type_categ==age_category_types[0]:
@@ -31,6 +142,8 @@ def protein_need_calc(kkal, age_type_categ,  w, reproductive_status, age, age_me
    else:
          protein_n=  3.28*(w**0.75)
    return protein_n
+
+
 
 def show_nutr_content(count_nutr_cont_all, other_nutrient_norms, nutrients_transl):
                                   for i in range(0, len(other_nutrients_1), 2):
