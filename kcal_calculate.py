@@ -98,7 +98,7 @@ def show_nutr_content(count_nutr_cont_all, other_nutrient_norms, nutrients_trans
                                       if diff>0:
                                          name_n=nutrients_transl.loc[nutrients_transl["name_in_database"] == name,"name_ru"].iloc[0].split(",") 
                                          emg = name_n[-1].strip() if len(name_n)>1 and "%" not in name_n[-1] else "g"
-                                         st.write(f"**{name_n}:** {round(diff,2)} {emg}")
+                                         st.write(f"**{name_n[0]}:** {round(diff,2)} {emg}")
                                         
 
 
