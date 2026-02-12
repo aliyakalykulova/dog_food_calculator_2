@@ -3,6 +3,8 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.sparse import csr_matrix
+import sqlite3
+
 
 metrics_age_types=["в годах","в месецах"]
 gender_types=["Самец", "Самка"]
