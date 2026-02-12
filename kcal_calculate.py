@@ -91,7 +91,109 @@ inner join ingredient_category on ingredient_category.id_category = ingredient.i
     nutrients_transl= pd.read_sql("""SELECT name_in_database, name_ru FROM  nutrients_names """, conn)
 
     return food, disease, standart, ingredirents_df,nutrients_transl
+
+@st.cache_resource(show_spinner=False)
+def build_text_pipeline(corpus, n_components=100):
+    vect = TfidfVectorizer(stop_words="english", max_features=5000)
+    X_tfidf = vect.fit_transform(corpus)
+    svd = TruncatedSVD(n_components=n_components, random_state=42)
+    X_reduced = svd.fit_transform(X_tfidf)
+    return vect, svd, X_reduced
+
+
+
+# -----------------------------------
+# 5) CATEGORICAL ENCODING
+# -----------------------------------
+
+@st.cache_resource(show_spinner=False)
+def build_categorical_encoder(df):
+    cats = df[["breed_size", "life_stage"]]
+
+    enc = OneHotEncoder(
+        sparse_output=True,
+        handle_unknown="ignore"
+    )
+
+    enc.fit(cats)
+    X = enc.transform(cats)
+
+    return enc, X
+
+
+# -----------------------------------
+# 6) COMBINE FEATURES INTO SPARSE MATRIX
+# -----------------------------------
+
+@st.cache_resource(show_spinner=False)
+def combine_features(text_reduced, _cat_matrix):
+    # Turn dense text_reduced into sparse form
+    X_sparse_text = csr_matrix(text_reduced)
+    return hstack([X_sparse_text, _cat_matrix])
+
+
+# -----------------------------------
+# 7) TRAIN RIDGE CLASSIFIERS FOR INGREDIENT PRESENCE
+# -----------------------------------
+
+@st.cache_resource(show_spinner=False)
+def train_ingredient_models(food, _X):
+    parsed_ings = []
+    for txt in food["ingredients"].dropna():
+        tokens = (txt.split(", ") )
+        parsed_ings.append(set(tokens))
+
+    # --- 2) Список уникальных ингредиентов ---
+    all_ings = [ing for s in parsed_ings for ing in s]
+    frequent = list(set(all_ings))
+
+    # --- 3) Формирование бинарных таргетов ---
+    targets = {}
+    parsed_series = food["ingredients"].fillna("").apply(
+        lambda txt: set(txt.split(", ")) if txt else set())
+
+    for ing in frequent:
+        targets[ing] = parsed_series.apply(lambda s: int(ing in s)).values
+
+    # --- 4) Обучение моделей ---
+    ing_models = {}
+    for ing, y in targets.items():
+        clf = RidgeClassifier()
+        clf.fit(_X, y)
+        ing_models[ing] = clf
+
+    return ing_models, frequent
+
+
+@st.cache_resource(show_spinner=False)
+def train_nutrient_models(food, _X):
+    nutrient_models = {}
+    scalers = {}
+
+    nutrients = ['moisture', 'protein', 'fats', 'carbohydrate']
   
+    for nutrient in nutrients:
+        y = food[nutrient].fillna(food[nutrient].median()).values.reshape(-1, 1)
+        scaler = None
+        y_scaled = y.ravel()
+        X_train, _, y_train, _ = train_test_split(_X, y_scaled, test_size=0.2, random_state=42)
+        base = Ridge()
+        search = GridSearchCV(
+            base,
+            param_grid={"alpha": [0.1, 1.0]},
+            scoring="r2",
+            cv=2,
+            n_jobs=-1,
+        )
+        search.fit(X_train, y_train)
+
+        nutrient_models[nutrient] = search.best_estimator_
+        scalers[nutrient] = scaler
+
+    return nutrient_models, scalers
+
+
+
 def apply_category_masks(X, encoder):
     X = X.toarray()
     feature_names = encoder.get_feature_names_out()
