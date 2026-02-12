@@ -46,6 +46,25 @@ major_minerals=['calcium_mg', 'phosphorus_mg', 'magnesium_mg', 'sodium_mg', 'pot
 vitamins=['vitamin_a_mcg', 'vitamin_e_mg', 'vitamin_d_mcg', 'vitamin_b1_mg', 'vitamin_b2_mg', 'vitamin_b3_mg', 'vitamin_b5_mg', 'vitamin_b6_mg', 'vitamin_b9_mcg', 'vitamin_b12_mcg']
 
 
+transl_dis={
+ "Inherited musculoskeletal disorders": ["musculoskeletal and joint care"] ,
+    "Inherited gastrointestinal disorders": ["digestive care","food sensitivity"],
+    "Inherited endocrine disorders": ["weight management"],
+    "Inherited eye disorders": ["nervous system care and stress"],
+    "Inherited nervous system disorders": ["nervous system care and stress"],
+    "Inherited cardiovascular disorders": ["heart care"],
+    "Inherited skin disorders": ["skin health"],
+    "Inherited immune disorders": ["aging care","puppy care","adult care"]	,
+    "Inherited urinary and reproductive disorders": ["urinary care"],
+    "Inherited respiratory disorders": ["aging care","puppy care","adult care"]	,
+    "Inherited blood disorders" : ["aging care","puppy care","adult care"],
+	"aging care":["aging care"],
+	"puppy care":["puppy care"],
+	"adult care":["adult care"],
+	"weight management":["weight management"],
+	"food sensitivity":["food sensitivity"]
+}
+
 def show_sidebar():
    st.sidebar.title("🐶 Smart Dog Diet Advisor")
    st.sidebar.write("Select breed + disorder → get personalized food suggestions")
@@ -250,6 +269,8 @@ def extract_target_foods(df, func_name, breed_size, lifestage):
     return df_func
 
 def get_conditions_for_function(food_df, func_name, breed_size, lifestage):
+	    func_name=transl_dis[func_name]
+	
 		df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("category")
 		df_func_w = extract_target_foods(df_wet, func_name, breed_size, lifestage)
 		
