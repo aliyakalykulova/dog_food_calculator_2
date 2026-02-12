@@ -26,7 +26,14 @@ from kcal_calculate import protein_need_calc
 from scipy.sparse import csr_matrix
 from kcal_calculate import get_conditions_for_function
 from kcal_calculate import  apply_category_masks
+
 from kcal_calculate import  load_data
+from kcal_calculate import build_text_pipeline
+from kcal_calculate import build_categorical_encoder
+from kcal_calculate import combine_features
+from kcal_calculate import train_ingredient_models
+from kcal_calculate import train_nutrient_models
+
 # все спсики-------------------------------------------------------------------------
 metrics_age_types=["в годах","в месецах"]
 gender_types=["Самец", "Самка"]
@@ -90,10 +97,6 @@ transl_dis={
 }
 
 
-# загрузка и подготовка датасетов-------------------------------------------------------------------------------------
-
-
-
 food_df, disease_df, df_standart, ingredirents_df,nutrients_transl= load_data()
 
 proteins=df_standart[df_standart["category_ru"].isin(["Мясо","Яйца и Молочные продукты"])]["name_feed_ingredient"].tolist()
@@ -102,134 +105,21 @@ carbonates_cer=df_standart[df_standart["category_ru"].isin(["Крупы"])]["nam
 carbonates_veg=df_standart[df_standart["category_ru"].isin(["Зелень и специи","Овощи и фрукты"])]["name_feed_ingredient"].tolist()
 water=["water"]
 
-
-#--------------------------------------------------------------------------------------------------------------------------------------------------------
-# Расчеты и обучение модели для рекомендации ингредиентов-------------------------------------------------------------------------------------------------
-# -----------------------------------
-# 4) TEXT VECTORIZATION & SVD
-# -----------------------------------
-@st.cache_resource(show_spinner=False)
-def build_text_pipeline(corpus, n_components=100):
-    vect = TfidfVectorizer(stop_words="english", max_features=5000)
-    X_tfidf = vect.fit_transform(corpus)
-    svd = TruncatedSVD(n_components=n_components, random_state=42)
-    X_reduced = svd.fit_transform(X_tfidf)
-    return vect, svd, X_reduced
-
 vectorizer, svd, X_text_reduced = build_text_pipeline(food_df["description"], n_components=100)
-
-# -----------------------------------
-# 5) CATEGORICAL ENCODING
-# -----------------------------------
-
-@st.cache_resource(show_spinner=False)
-def build_categorical_encoder(df):
-    cats = df[["breed_size", "life_stage"]]
-
-    enc = OneHotEncoder(
-        sparse_output=True,
-        handle_unknown="ignore"
-    )
-
-    enc.fit(cats)
-    X = enc.transform(cats)
-
-    return enc, X
-
 encoder, X_categorical = build_categorical_encoder(food_df)
-
 X_categorical=apply_category_masks(X_categorical,encoder)
-
-# -----------------------------------
-# 6) COMBINE FEATURES INTO SPARSE MATRIX
-# -----------------------------------
-
-@st.cache_resource(show_spinner=False)
-def combine_features(text_reduced, _cat_matrix):
-    # Turn dense text_reduced into sparse form
-    X_sparse_text = csr_matrix(text_reduced)
-    return hstack([X_sparse_text, _cat_matrix])
-
 X_combined = combine_features(X_text_reduced, X_categorical)
 
-# -----------------------------------
-# 7) TRAIN RIDGE CLASSIFIERS FOR INGREDIENT PRESENCE
-# -----------------------------------
-
-@st.cache_resource(show_spinner=False)
-def train_ingredient_models(food, _X):
-    parsed_ings = []
-    for txt in food["ingredients"].dropna():
-        tokens = (txt.split(", ") )
-        parsed_ings.append(set(tokens))
-
-    # --- 2) Список уникальных ингредиентов ---
-    all_ings = [ing for s in parsed_ings for ing in s]
-    frequent = list(set(all_ings))
-
-    # --- 3) Формирование бинарных таргетов ---
-    targets = {}
-    parsed_series = food["ingredients"].fillna("").apply(
-        lambda txt: set(txt.split(", ")) if txt else set())
-
-    for ing in frequent:
-        targets[ing] = parsed_series.apply(lambda s: int(ing in s)).values
-
-    # --- 4) Обучение моделей ---
-    ing_models = {}
-    for ing, y in targets.items():
-        clf = RidgeClassifier()
-        clf.fit(_X, y)
-        ing_models[ing] = clf
-
-    return ing_models, frequent
-
-
-
-
-# **This line must run at import-time** so ingredient_models is defined before you use it below:
 ingredient_models, frequent_ingredients = train_ingredient_models(food_df, X_combined)
-
-
 vectorizer_wet, svd_wet, X_text_reduced_wet = build_text_pipeline(food_df[food_df["food_form"]=="wet food"]["description"], n_components=100)
 encoder_wet, X_categorical_wet = build_categorical_encoder(food_df[food_df["food_form"]=="wet food"])
 X_categorical_wet=apply_category_masks(X_categorical_wet,encoder_wet)
 X_combined_wet = combine_features(X_text_reduced_wet, X_categorical_wet)
-#X_combined = csr_matrix(X_text_reduced)
 
-@st.cache_resource(show_spinner=False)
-def train_nutrient_models(food, _X):
-    nutrient_models = {}
-    scalers = {}
-
-    nutrients = ['moisture', 'protein', 'fats', 'carbohydrate']
-  
-    for nutrient in nutrients:
-        y = food[nutrient].fillna(food[nutrient].median()).values.reshape(-1, 1)
-        scaler = None
-        y_scaled = y.ravel()
-        X_train, _, y_train, _ = train_test_split(_X, y_scaled, test_size=0.2, random_state=42)
-        base = Ridge()
-        search = GridSearchCV(
-            base,
-            param_grid={"alpha": [0.1, 1.0]},
-            scoring="r2",
-            cv=2,
-            n_jobs=-1,
-        )
-        search.fit(X_train, y_train)
-
-        nutrient_models[nutrient] = search.best_estimator_
-        scalers[nutrient] = scaler
-
-    return nutrient_models, scalers
-
-# **This line must run at import-time** so ridge_models is defined before you use it below:
 ridge_models, scalers = train_nutrient_models(food_df[food_df["food_form"]=="wet food"], X_combined_wet)
 
 # Кнопки и состояния -----------------------------------------------------------------------------------
 # 1 этап выбор характеристик для собаки --------------------------------------------------------------
-
 st.set_page_config(page_title="Рекомендации по питанию собак", layout="centered")
 st.header("Рекомендации по питанию собак")
 if "show_result_1" not in st.session_state:
