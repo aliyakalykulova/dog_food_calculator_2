@@ -22,6 +22,7 @@ activity_level_cat_1 = ["Пассивный (гуляеет на поводке 
                           "Взрослые, склонные к ожирению"]
 activity_level_cat_2 = ["Пассивный", "Средний", "Активный"]
 
+main_nutrs=['moisture_per', 'protein_per', 'carbohydrate_per', 'fats_per']
 other_nutrients_1=['ash_g', 'fiber_g', 'cholesterol_mg', 'total_sugar_g']
 other_nutrients_2 = ['choline_mg', 'selenium_mcg', 'iodine_mcg', 'linoleic_acid_g','alpha_linolenic_acid_g', 'arachidonic_acid_g', 'epa_g', 'dha_g']
 other_nutrients=other_nutrients_1+other_nutrients_2
