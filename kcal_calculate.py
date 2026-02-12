@@ -125,7 +125,7 @@ def extract_target_foods(df, func_name, breed_size, lifestage):
         df_func = df[(df["breed_size"].isin([breed_size, "-"])) & (df["life_stage"].isin([lifestage, "-"]))]
     return df_func
 
-def get_conditions_for_function(df, func_name, breed_size, lifestage, food_df):
+def get_conditions_for_function(food_df, func_name, breed_size, lifestage):
 		df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("category")
 		df_func_w = extract_target_foods(df_wet, func_name, breed_size, lifestage)
 		
