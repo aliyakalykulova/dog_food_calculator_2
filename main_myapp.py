@@ -728,7 +728,7 @@ if user_breed:
                           if selected_maximize != st.session_state.prev_selected_maximize:
                             st.session_state.show_result_2 = False
                             st.session_state.prev_selected_maximize = selected_maximize.copy()
-						  selected_maximize=[nutrients_transl.loc[nutrients_transl["name_ru"].str.contains(nutr, na=False),"name_in_database"].iloc[0] for nutr in main_nutrs]
+                          selected_maximize=[nutrients_transl.loc[nutrients_transl["name_ru"].str.contains(nutr, na=False),"name_in_database"].iloc[0] for nutr in main_nutrs]
                           f = [-sum(food[i][nutr] for nutr in selected_maximize) for i in ingredient_names]
 
 
