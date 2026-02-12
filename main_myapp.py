@@ -751,6 +751,7 @@ if user_breed:
                                       for nutr in main_nutrs
                                   }
                                   for k, v in nutrients.items():
+									  k = nutrients_transl["name_in_database"] == k,"name_ru"].iloc[0].split(",")[0]
                                       st.write(f"**{k}:** {int(round(v,0))} г")
                                   en_nutr_100=3.5*nutrients["protein_per"]+8.5*nutrients["fats_per"]+3.5*nutrients["carbohydrate_per"]
                                   st.write(f"**Энергетическая ценность:** {int(round(en_nutr_100,0))} ккал")
@@ -778,6 +779,7 @@ if user_breed:
                                   st.markdown(f"### 💪 Питательная ценность на {int(round(needed_feed_g, 0))} г:")
 
                                   for k in main_nutrs:
+									  k=nutrients_transl["name_in_database"] == k,"name_ru"].iloc[0].split(",")[0]
                                       st.write(f"**{k}:** {int(round(count_nutr_cont_all[k], 0))} г")
                                   st.write(f"****") 
                                 
@@ -835,6 +837,7 @@ if user_breed:
                                     
                                     st.markdown("### 💪 Питательная ценность на 100 г:")
                                     for nutr in main_nutrs:
+										nutr=nutrients_transl["name_in_database"] == nutr,"name_ru"].iloc[0].split(",")[0]
                                         st.write(f"**{nutr}:** {int(round(totals[nutr], 0))} г")
 										
                                     en_nutr_100=3.5*totals["protein_per"]+8.5*totals["fats_per"]+3.5*totals["carbohydrate_per"]
@@ -862,6 +865,7 @@ if user_breed:
                                     st.markdown(f"### 💪 Питательная ценность на {int(round(needed_feed_g, 0))} г:")
 
                                     for k in main_nutrs:
+									  k=nutrients_transl["name_in_database"] == k,"name_ru"].iloc[0].split(",")[0]
                                       st.write(f"**{k}:** {int(round(count_nutr_cont_all[k],0))} г")
                                     st.write(f"****") 
                                     show_nutr_content(count_nutr_cont_all, other_nutrient_norms)   
