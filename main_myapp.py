@@ -14,6 +14,7 @@ import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 import textwrap
+import sqlite3
 
 from kcal_calculate import kcal_calculate
 from kcal_calculate import size_category
@@ -22,8 +23,7 @@ from kcal_calculate import bar_print
 from kcal_calculate import get_other_nutrient_norms
 from kcal_calculate import show_nutr_content
 from kcal_calculate import protein_need_calc
-import sqlite3
-
+from scipy.sparse import csr_matrix
 # все спсики-------------------------------------------------------------------------
 
 metrics_age_types=["в годах","в месецах"]
@@ -91,8 +91,7 @@ transl_dis={
 
 
 # загрузка и подготовка датасетов-------------------------------------------------------------------------------------
-from scipy.sparse import csr_matrix
-import numpy as np
+
 
 def apply_category_masks(X, encoder):
     X = X.toarray()
