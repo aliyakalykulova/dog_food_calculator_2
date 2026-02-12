@@ -8,7 +8,8 @@ rep_status_types=["Нет", "Щенность (беременность)", "Пе
 berem_time_types=["первые 4 недедели беременности","последние 5 недель беременности"]
 lact_time_types=["1 неделя","2 неделя","3 неделя","4 неделя"]
 age_category_types=["puppy","adult","senior"]
-size_types=["Мелкие",  "Средние",  "Крупные", "Очень крупные"]
+size_types=["small",  "medium",  "large"]
+
 activity_level_cat_1 = ["Пассивный (гуляеет на поводке менее 1ч/день)", "Средний1 (1-3ч/день, низкая активность)",
                           "Средний2 (1-3ч/день, высокая активность)", "Активный (3-6ч/день, рабочие собаки, например, овчарки)",
                           "Высокая активность в экстремальных условиях (гонки на собачьих упряжках со скоростью 168 км/день в условиях сильного холода)",
@@ -20,17 +21,6 @@ other_nutrients_2 = ['choline_mg', 'selenium_mcg', 'iodine_mcg', 'linoleic_acid_
 other_nutrients=other_nutrients_1+other_nutrients_2
 major_minerals=['calcium_mg', 'phosphorus_mg', 'magnesium_mg', 'sodium_mg', 'potassium_mg', 'iron_mg', 'copper_mg', 'zinc_mg', 'manganese_mg']
 vitamins=['vitamin_a_mcg', 'vitamin_e_mg', 'vitamin_d_mcg', 'vitamin_b1_mg', 'vitamin_b2_mg', 'vitamin_b3_mg', 'vitamin_b5_mg', 'vitamin_b6_mg', 'vitamin_b9_mcg', 'vitamin_b12_mcg']
-
-def classify_breed_size(row):
-    w = (row["min_weight"] + row["max_weight"]) / 2
-    if w <= 10:
-        return "Small Breed"
-    elif w <= 25:
-        return "Medium Breed"
-    else:
-        return "Large Breed"
-
-
 
 def protein_need_calc(kkal, age_type_categ,  w, reproductive_status, age, age_mesuare_type):
    protein_n=0
@@ -254,15 +244,14 @@ def bar_print(total_norm,current_value,name_ing,mg):
                                         ax.text(norma, -0.2,  f"Норма\n{round(total_norm,2)}", color='green', ha='center', va='top', fontsize=9)
                                         return fig
 
-def size_category(w):
+def size_category(df):
+    w = (df["min_weight"].iloc[0] + df["max_weight"].iloc[0]) / 2  
     if w <= 10:
         return size_types[0]
     elif w <= 25:
         return size_types[1]
-    elif w <= 40:
+    else :
         return size_types[2]
-    else:
-        return size_types[3]
 
 def age_type_category(size_categ, age ,age_metric):
         if age_metric==metrics_age_types[0]:
@@ -284,21 +273,13 @@ def age_type_category(size_categ, age ,age_metric):
           elif age>7*12:    
              return age_category_types[2]
               
-        elif size_categ==size_types[3]:
+        else:
           if age<=6*12 and age>=24:    
               return age_category_types[1]
           elif age<24:    
               return age_category_types[0]
           elif age>6*12:   
               return age_category_types[2]
-              
-        else:  
-          if age<=7*12:
-                return age_category_types[1]
-          elif age<12:     
-             return age_category_types[0]
-          elif age>7*12:    
-            return age_category_types[2]
             
 def kcal_calculate(reproductive_status, berem_time, num_pup, L_time, age_type, weight, expected, activity_level, user_breed, age):
     formula=""
