@@ -490,7 +490,6 @@ if user_breed:
     if not info.empty:
         breed_size = info["breed_size_category"].values[0]
         disorders = info["name_disease"].unique().tolist()+["food sensitivity","weight management"]+[i for i in  ["aging care","puppy care","adult care"] if transl_age[age_type_categ] in i]
-        st.write(transl_age[age_type_categ])
         selected_disorder = st.selectbox("Заболевание:", disorders)
         match = info.loc[info["name_disease"] == selected_disorder, "name_disorder"]
         disorder_type = match.iloc[0] if not match.empty else selected_disorder
