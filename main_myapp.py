@@ -333,7 +333,7 @@ if "kkal_sel" not in st.session_state:
 breed_list = sorted(disease_df["name_breed"].unique())
 user_breed = st.selectbox("Порода собаки:", breed_list)
 
-breed_size = size_category(disease_df[disease_df["name_breed"] == user_breed])
+breed_size, avg_wight = size_category(disease_df[disease_df["name_breed"] == user_breed])
 age_type_categ = age_type_category(breed_size, age ,age_metric)
 
 if age!=st.session_state.age_sel or age_metric!=st.session_state.age_metric or weight != st.session_state.weight_sel:
