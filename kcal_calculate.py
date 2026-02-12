@@ -46,6 +46,11 @@ major_minerals=['calcium_mg', 'phosphorus_mg', 'magnesium_mg', 'sodium_mg', 'pot
 vitamins=['vitamin_a_mcg', 'vitamin_e_mg', 'vitamin_d_mcg', 'vitamin_b1_mg', 'vitamin_b2_mg', 'vitamin_b3_mg', 'vitamin_b5_mg', 'vitamin_b6_mg', 'vitamin_b9_mcg', 'vitamin_b12_mcg']
 
 
+def show_sidebar():
+   st.sidebar.title("🐶 Smart Dog Diet Advisor")
+   st.sidebar.write("Select breed + disorder → get personalized food suggestions")
+   st.sidebar.image("https://cdn-icons-png.flaticon.com/512/616/616408.png", width=80)
+
 
 @st.cache_data(show_spinner=False)
 def load_data():
@@ -268,65 +273,6 @@ def protein_need_calc(kkal, age_type_categ,  w, reproductive_status, age, age_me
 
 
 
-def show_nutr_content(count_nutr_cont_all, other_nutrient_norms, nutrients_transl):
-                                  for i in range(0, len(other_nutrients_1), 2):
-                                      cols = st.columns(2)
-                                      for j, col in enumerate(cols):
-                                          if i + j < len(other_nutrients_1):
-                                              nutris = (other_nutrients_1)[i + j]
-                                              nutr_text=nutrients_transl.loc[nutrients_transl["name_in_database"] == nutris,"name_ru"].iloc[0].split(",")    
-                                              emg=""
-                                              if len(nutr_text)>1:
-                                                if "%" not in nutr_text[-1]:
-                                                    emg=nutr_text[-1].strip()
-                                                else:
-                                                  emg="g"
-                                              else:
-                                                emg="g"
-                                              with col:
-                                                  st.markdown(f"**{nutr_text[0]}**: {count_nutr_cont_all.get(nutris, '')} {emg}")
-
-                                  coli, colii=st.columns([6,3])
-                                  with coli:
-                                     for i in range(0, len(other_nutrients_2)):
-                                              nutris = other_nutrients_2[i]
-                                              nutr_text=nutrients_transl.loc[nutrients_transl["name_in_database"] == nutris,"name_ru"].iloc[0].split(",")    
-                                              emg = nutr_text[-1].strip() if len(nutr_text)>1 and "%" not in nutr_text[-1] else "g"
-                                              if nutr_text[0] in other_nutrient_norms:
-                                                norma = other_nutrient_norms[nutr_text[0]]
-                                                st.pyplot(bar_print(norma, count_nutr_cont_all.get(nutris, ''), nutr_text[0]+", "+ emg, str(emg)))
-                               
-                                  st.markdown("#### 🔹 Минералы")
-                                  coli, colii=st.columns([6,3])
-                                  with coli:
-                                     for i in range(0, len(major_minerals)):
-                                              nutris = major_minerals[i]
-                                              nutr_text=nutrients_transl.loc[nutrients_transl["name_in_database"] == nutris,"name_ru"].iloc[0].split(",") 
-                                              emg = nutr_text[-1].strip() if len(nutr_text)>1 and "%" not in nutr_text[-1] else "g"
-                                              norma = other_nutrient_norms[nutris]
-                                              st.pyplot(bar_print(norma, count_nutr_cont_all.get(nutris, ''), nutr_text[0]+", "+ emg, str(emg)))
-                                                  
-                                  st.markdown("#### 🍊 Витамины")
-                                  coli, colii=st.columns([6,3])
-                                  with coli:
-                                     for i in range(0, len(vitamins)):
-                                              nutris = vitamins[i]
-                                              nutr_text=nutrients_transl.loc[nutrients_transl["name_in_database"] == nutris,"name_ru"].iloc[0].split(",") 
-                                              emg = nutr_text[-1].strip() if len(nutr_text)>1 and "%" not in nutr_text[-1] else "g"
-                                              norma = other_nutrient_norms[nutris]
-                                              st.pyplot(bar_print(norma, count_nutr_cont_all.get(nutris, ''), nutr_text[0]+", "+ emg, str(emg)))
-
-                                  st.markdown("### Необходимо добавить")
-                                  for name,amount in count_nutr_cont_all.items():
-                                    if name in other_nutrient_norms:
-                                      diff=other_nutrient_norms[name] - amount
-                                      if diff>0:
-                                         name_n=nutrients_transl.loc[nutrients_transl["name_in_database"] == name,"name_ru"].iloc[0].split(",") 
-                                         emg = name_n[-1].strip() if len(name_n)>1 and "%" not in name_n[-1] else "g"
-                                         st.write(f"**{name_n[0]}:** {round(diff,2)} {emg}")
-                                        
-
-
 def get_other_nutrient_norms(kkal, age_type_categ,  w, reproductive_status):
    if age_type_categ==age_category_types[0]:
          nutrients_per_1000_kcal = {
@@ -429,6 +375,68 @@ def get_other_nutrient_norms(kkal, age_type_categ,  w, reproductive_status):
     "epa_g(50-60%) + dha_g(40-50%)": 0.03*(w**0.75)
        }
       return other_for_adult
+
+
+def show_nutr_content(count_nutr_cont_all, nutrients_transl, kkal_sel, age_type_categ, weight_sel, select_reproductive_status):
+                                  other_nutrient_norms = get_other_nutrient_norms(kkal_sel, age_type_categ, weight_sel, select_reproductive_status)
+                                  for i in range(0, len(other_nutrients_1), 2):
+                                      cols = st.columns(2)
+                                      for j, col in enumerate(cols):
+                                          if i + j < len(other_nutrients_1):
+                                              nutris = (other_nutrients_1)[i + j]
+                                              nutr_text=nutrients_transl.loc[nutrients_transl["name_in_database"] == nutris,"name_ru"].iloc[0].split(",")    
+                                              emg=""
+                                              if len(nutr_text)>1:
+                                                if "%" not in nutr_text[-1]:
+                                                    emg=nutr_text[-1].strip()
+                                                else:
+                                                  emg="g"
+                                              else:
+                                                emg="g"
+                                              with col:
+                                                  st.markdown(f"**{nutr_text[0]}**: {count_nutr_cont_all.get(nutris, '')} {emg}")
+
+                                  coli, colii=st.columns([6,3])
+                                  with coli:
+                                     for i in range(0, len(other_nutrients_2)):
+                                              nutris = other_nutrients_2[i]
+                                              nutr_text=nutrients_transl.loc[nutrients_transl["name_in_database"] == nutris,"name_ru"].iloc[0].split(",")    
+                                              emg = nutr_text[-1].strip() if len(nutr_text)>1 and "%" not in nutr_text[-1] else "g"
+                                              if nutr_text[0] in other_nutrient_norms:
+                                                norma = other_nutrient_norms[nutr_text[0]]
+                                                st.pyplot(bar_print(norma, count_nutr_cont_all.get(nutris, ''), nutr_text[0]+", "+ emg, str(emg)))
+                               
+                                  st.markdown("#### 🔹 Минералы")
+                                  coli, colii=st.columns([6,3])
+                                  with coli:
+                                     for i in range(0, len(major_minerals)):
+                                              nutris = major_minerals[i]
+                                              nutr_text=nutrients_transl.loc[nutrients_transl["name_in_database"] == nutris,"name_ru"].iloc[0].split(",") 
+                                              emg = nutr_text[-1].strip() if len(nutr_text)>1 and "%" not in nutr_text[-1] else "g"
+                                              norma = other_nutrient_norms[nutris]
+                                              st.pyplot(bar_print(norma, count_nutr_cont_all.get(nutris, ''), nutr_text[0]+", "+ emg, str(emg)))
+                                                  
+                                  st.markdown("#### 🍊 Витамины")
+                                  coli, colii=st.columns([6,3])
+                                  with coli:
+                                     for i in range(0, len(vitamins)):
+                                              nutris = vitamins[i]
+                                              nutr_text=nutrients_transl.loc[nutrients_transl["name_in_database"] == nutris,"name_ru"].iloc[0].split(",") 
+                                              emg = nutr_text[-1].strip() if len(nutr_text)>1 and "%" not in nutr_text[-1] else "g"
+                                              norma = other_nutrient_norms[nutris]
+                                              st.pyplot(bar_print(norma, count_nutr_cont_all.get(nutris, ''), nutr_text[0]+", "+ emg, str(emg)))
+
+                                  st.markdown("### Необходимо добавить")
+                                  for name,amount in count_nutr_cont_all.items():
+                                    if name in other_nutrient_norms:
+                                      diff=other_nutrient_norms[name] - amount
+                                      if diff>0:
+                                         name_n=nutrients_transl.loc[nutrients_transl["name_in_database"] == name,"name_ru"].iloc[0].split(",") 
+                                         emg = name_n[-1].strip() if len(name_n)>1 and "%" not in name_n[-1] else "g"
+                                         st.write(f"**{name_n[0]}:** {round(diff,2)} {emg}")
+                                        
+
+
 
 
 
@@ -617,5 +625,10 @@ def kcal_calculate(reproductive_status, berem_time, num_pup, L_time, age_type, w
               kcal=90*(weight**0.75)
               formula= r"kcal = 90  \cdot вес^{0.75}"
               page = "55"
-              
-    return kcal, formula, page
+				
+    st.markdown(f"Было рассчитано по формуле")
+    st.latex(formula)
+    url = "https://europeanpetfood.org/wp-content/uploads/2024/09/FEDIAF-Nutritional-Guidelines_2024.pdf#page=" + page
+    st.markdown(f"[Подробнее]({url})")   
+    kcal= 0 if kcal<0 else kcal
+    return kcal
