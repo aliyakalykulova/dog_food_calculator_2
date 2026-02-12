@@ -783,7 +783,7 @@ if user_breed:
                                       st.write(f"**{k_trl}:** {int(round(count_nutr_cont_all[k], 0))} г")
                                   st.write(f"****") 
                                 
-                                  show_nutr_content(count_nutr_cont_all, other_nutrient_norms)    
+                                  show_nutr_content(count_nutr_cont_all, other_nutrient_norms,nutrients_transl)    
                                 
                             
                               else:
@@ -868,7 +868,7 @@ if user_breed:
                                       k_trl=nutrients_transl.loc[nutrients_transl["name_in_database"] == k,"name_ru"].iloc[0].split(",")[0]
                                       st.write(f"**{k_trl}:** {int(round(count_nutr_cont_all[k],0))} г")
                                     st.write(f"****") 
-                                    show_nutr_content(count_nutr_cont_all, other_nutrient_norms)   
+                                    show_nutr_content(count_nutr_cont_all, other_nutrient_norms,nutrients_transl)   
 
 
 
