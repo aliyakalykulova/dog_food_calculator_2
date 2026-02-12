@@ -364,11 +364,11 @@ def bar_print(total_norm,current_value,name_ing,mg):
 def size_category(df):
     w = (df["min_weight"].iloc[0] + df["max_weight"].iloc[0]) / 2  
     if w <= 10:
-        return size_types[0]
+        return size_types[0],w
     elif w <= 25:
-        return size_types[1]
+        return size_types[1],w
     else :
-        return size_types[2]
+        return size_types[2],w
 
 def age_type_category(size_categ, age ,age_metric):
         if age_metric==metrics_age_types[0]:
