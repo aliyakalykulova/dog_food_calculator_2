@@ -5,7 +5,23 @@ import numpy as np
 from scipy.sparse import csr_matrix
 import sqlite3
 import pandas as pd
-
+import streamlit as st
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import Ridge, RidgeClassifier
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.decomposition import TruncatedSVD
+from sklearn.metrics.pairwise import cosine_similarity
+from scipy.sparse import hstack, csr_matrix
+from collections import Counter
+from ctypes import create_string_buffer
+from scipy.optimize import linprog  
+import numpy as np
+import itertools
+import matplotlib.pyplot as plt
+import textwrap
+import sqlite3
 
 
 metrics_age_types=["в годах","в месецах"]
