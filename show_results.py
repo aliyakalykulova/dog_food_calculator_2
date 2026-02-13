@@ -126,31 +126,31 @@ def show_resuts_success_2(best_recipe,main_nutrs,metobolic_energy,food,other_nut
 def calc_recipe(ingr_ranges,ingredient_names,main_nutrs,food,nutr_ranges):
    st.error("❌ Не удалось найти оптимальное решение. Попробуйте другие параметры.")
    with st.spinner("🔄 Ищем по другому методу..."):
-   step = 1  # шаг в процентах
-   variants = []
-   ranges = [np.arange(low, high + step, step) for (low, high) in ingr_ranges]
-   for combo in itertools.product(*ranges):
-      if abs(sum(combo) - 100) < 1e-6:
-           variants.append(combo)
-   best_recipe = None
-   min_penalty = float("inf")
-   for combo in variants:
-        values = dict(zip(ingredient_names, combo))
-        totals = {nutr: 0.0 for nutr in main_nutrs}
-        for i, ingr in enumerate(ingredient_names):
+       step = 1  # шаг в процентах
+       variants = []
+       ranges = [np.arange(low, high + step, step) for (low, high) in ingr_ranges]
+       for combo in itertools.product(*ranges):
+           if abs(sum(combo) - 100) < 1e-6:
+               variants.append(combo)
+       best_recipe = None
+       min_penalty = float("inf")
+       for combo in variants:
+            values = dict(zip(ingredient_names, combo))
+            totals = {nutr: 0.0 for nutr in main_nutrs}
+            for i, ingr in enumerate(ingredient_names):
+                for nutr in main_nutrs:
+                    totals[nutr] += values[ingr] * food[ingr][nutr]/100
+            penalty = 0
             for nutr in main_nutrs:
-                totals[nutr] += values[ingr] * food[ingr][nutr]/100
-        penalty = 0
-        for nutr in main_nutrs:
-             val = totals[nutr]
-             min_val = nutr_ranges[nutr][0]
-             max_val = nutr_ranges[nutr][1]
-             if val < min_val:
-                 penalty += min_val - val
-             elif val > max_val:
-                 penalty += val - max_val
-        if penalty < min_penalty:
-             min_penalty = penalty
-             best_recipe = (values, totals)
+                 val = totals[nutr]
+                 min_val = nutr_ranges[nutr][0]
+                 max_val = nutr_ranges[nutr][1]
+                 if val < min_val:
+                     penalty += min_val - val
+                 elif val > max_val:
+                     penalty += val - max_val
+            if penalty < min_penalty:
+                 min_penalty = penalty
+                 best_recipe = (values, totals)
    return best_recipe
 
