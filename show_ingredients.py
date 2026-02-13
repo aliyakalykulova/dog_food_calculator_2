@@ -60,7 +60,7 @@ def ingredient_recomendation(ingredient_models,breed_size, age_type_categ,disord
             st.subheader("🌿 Рекомендуемые ингредиенты")
             for ing in ingredients_finish:
                 st.write("• " + ing)
-            return ingredients_finish
+            return ingredients_finish,keywords
 
 def nutrients_recomendation(vectorizer_wet,keywords,svd_wet,encoder_wet, breed_size, age_type_categ, ridge_models,scalers ):
             kw_tfidf = vectorizer_wet.transform([keywords])
