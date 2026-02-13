@@ -157,7 +157,7 @@ if user_breed:
                st.session_state.show_result_1 = True
                st.session_state.show_result_2 = False
 
-			ingredients_finish=ingredient_recomendation(ingredient_models,breed_size, age_type_categ,disorder_type, selected_disorder,vectorizer,svd,encoder, df_standart)
+            ingredients_finish=ingredient_recomendation(ingredient_models,breed_size, age_type_categ,disorder_type, selected_disorder,vectorizer,svd,encoder, df_standart)
             nutrient_preds = nutrients_recomendation(vectorizer_wet,keywords,svd_wet,encoder_wet, breed_size, age_type_categ, ridge_models,scalers )
   
             if len(ingredients_finish)>0:               
