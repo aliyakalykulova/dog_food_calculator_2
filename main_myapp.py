@@ -270,7 +270,7 @@ if user_breed:
                           nutr_ranges = {}
                           maximaze_nutrs = get_conditions_for_function(food_df, disorder_type, breed_size, age_type_categ)
 						  
-                          needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, age ,age_metric)					  
+                          needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, st.session_state.age_sel , st.session_state.age_metr_sel)					  
                           nutr_ranges['moisture_per'] = st.slider(f"{'Влага'}", 0, 100, (int(nutrient_preds["moisture"]-5), int(nutrient_preds["moisture"]+5)))
                           nutr_ranges['protein_per'] = st.slider(f"{'Белки'}", 0, 100, (int(nutrient_preds["protein"]-3), int(nutrient_preds["protein"]+3)))
                           nutr_ranges['carbohydrate_per'] = st.slider(f"{'Углеводы'}", 0, 100, (int(nutrient_preds["carbohydrate"]-2), int(nutrient_preds["carbohydrate"]+2)))
