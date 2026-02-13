@@ -32,7 +32,7 @@ def ingredient_recomendation(ingredient_models,breed_size, age_type_categ,disord
             cat_vec = encoder.transform([[breed_size, age_type_categ]])
             kw_combined = hstack([csr_matrix(kw_reduced), cat_vec])
 			
-			      ing_scores = {ing: clf.decision_function(kw_combined)[0] for ing, clf in ingredient_models.items()}
+            ing_scores = {ing: clf.decision_function(kw_combined)[0] for ing, clf in ingredient_models.items()}
 
             proteins=df_standart[df_standart["category_ru"].isin(["Мясо","Яйца и Молочные продукты"])]["name_feed_ingredient"].tolist()
             oils=df_standart[df_standart["category_ru"].isin([ "Масло и жир"])]["name_feed_ingredient"].tolist()
