@@ -334,8 +334,7 @@ if user_breed:
                                   best_recipe=calc_recipe(ingr_ranges,ingredient_names,main_nutrs,food,nutr_ranges)
                                   if best_recipe:
                                            show_resuts_success_2(best_recipe,main_nutrs,metobolic_energy,food,other_nutrients,major_minerals,vitamins,ingredient_names,
-                                                           ingr_ranges,nutr_ranges,nutrients_transl, st.session_state.kkal_sel, age_type_categ, st.session_state.weight_sel, 
-														   st.session_state.select_reproductive_status)            
+                                                           ingr_ranges,nutr_ranges,nutrients_transl, st.session_state.kkal_sel, age_type_categ, st.session_state.weight_sel,st.session_state.select_reproductive_status)
                                   else:
                                      st.error("🚫 Не удалось найти подходящий состав даже вручную.")
                       else:
