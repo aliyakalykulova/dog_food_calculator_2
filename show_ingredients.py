@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import itertools
+from scipy.sparse import hstack, csr_matrix
 
 disorder_keywords = {
     "Inherited musculoskeletal disorders": "muscle joint bone cartilage jd joint mobility glucosamine arthritis cartilage flexibility",
