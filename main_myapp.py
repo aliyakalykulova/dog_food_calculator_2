@@ -328,7 +328,7 @@ if user_breed:
                               res = linprog(f, A_ub=A, b_ub=b, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method="highs")
 
                               if res.success:
-								  show_resuts_success(ingredient_names,res,food,main_nutrs,nutrients_transl,metobolic_energy,other_nutrients,major_minerals,vitamins,
+                                   show_resuts_success(ingredient_names,res,food,main_nutrs,nutrients_transl,metobolic_energy,other_nutrients,major_minerals,vitamins,
                                    count_nutr_cont_all,st.session_state.kkal_sel, age_type_categ, st.session_state.weight_sel, st.session_state.select_reproductive_status)                            
                               else:
 								  best_recipe=calc_recipe(ingr_ranges,ingredient_names,main_nutrs,food,nutr_ranges)
