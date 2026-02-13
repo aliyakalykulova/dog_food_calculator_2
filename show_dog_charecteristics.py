@@ -1,4 +1,5 @@
 import streamlit as st
+from kcal_calculate import show_sidebar
 
 
 def show_dog_characterictics(disease_df):
