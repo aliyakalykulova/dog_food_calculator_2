@@ -33,6 +33,14 @@ from kcal_calculate import combine_features
 from kcal_calculate import train_ingredient_models
 from kcal_calculate import train_nutrient_models
 from kcal_calculate import show_sidebar
+from show_dog_charecteristics import show_dog_characterictics
+from show_ingredients import ingredient_recomendation
+from show_ingredients import nutrients_recomendation
+from show_results import show_resuts_success
+from show_results import show_figures_ingr_nutr
+from show_results import show_resuts_success_2
+from show_results import calc_recipe
+
 # все спсики-------------------------------------------------------------------------
 metrics_age_types=["в годах","в месецах"]
 gender_types=["Самец", "Самка"]
