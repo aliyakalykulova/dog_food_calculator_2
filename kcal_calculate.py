@@ -269,16 +269,13 @@ def extract_target_foods(df, func_name, breed_size, lifestage):
     return df_func
 
 def get_conditions_for_function(food_df, func_name, breed_size, lifestage):
-	    func_name=transl_dis[func_name]
-	
-		df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("category")
-		df_func_w = extract_target_foods(df_wet, func_name, breed_size, lifestage)
-		
-		df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("category")
-		df_func_dr=extract_target_foods(df_dry, func_name, breed_size, lifestage)		
-		
-		maximize = [ i for i in main_nutrs  if (df_func_w[i.replace("_per","")].mean() > df_wet[i.replace("_per","")].mean() or df_func_dr[i.replace("_per","")].mean() > df_dry[i.replace("_per","")].mean())]
-		return  maximize
+        func_name=transl_dis[func_name]
+        df_wet = (food_df[(food_df["food_form"] == "wet food") & (food_df["moisture"] > 50)].copy()).explode("category")
+        df_func_w = extract_target_foods(df_wet, func_name, breed_size, lifestage)
+        df_dry = (food_df[(food_df["food_form"] == "dry food") & (food_df["moisture"] < 50)].copy()).explode("category")
+        df_func_dr=extract_target_foods(df_dry, func_name, breed_size, lifestage)		
+        maximize = [ i for i in main_nutrs  if (df_func_w[i.replace("_per","")].mean() > df_wet[i.replace("_per","")].mean() or df_func_dr[i.replace("_per","")].mean() > df_dry[i.replace("_per","")].mean())]
+        return  maximize
 
 
 
