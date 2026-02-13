@@ -1,6 +1,7 @@
 import streamlit as st
 from kcal_calculate import show_sidebar
 from kcal_calculate import size_category
+from kcal_calculate import age_type_category
 
 metrics_age_types=["в годах","в месецах"]
 gender_types=["Самец", "Самка"]
