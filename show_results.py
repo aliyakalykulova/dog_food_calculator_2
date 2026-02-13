@@ -49,7 +49,7 @@ def show_resuts_success(ingredient_names,res,food,main_nutrs,nutrients_transl,me
          st.write(f"****") 
          show_nutr_content(count_nutr_cont_all,nutrients_transl, kkal_sel, age_type_categ, weight_sel, select_reproductive_status)    
 
-def show_figures_ingr_nutr(ingredient_names,ingr_ranges,nutr_ranges,totals,nutrients_transl):
+def show_figures_ingr_nutr(ingredient_names,ingr_ranges,nutr_ranges,totals,nutrients_transl,values):
   # --- График 1: Состав ингредиентов ---
      fig1, ax1 = plt.subplots(figsize=(10, 6))
      ingr_vals = [values[i] for i in ingredient_names]
@@ -118,7 +118,7 @@ def show_resuts_success_2(best_recipe,main_nutrs,metobolic_energy,food,other_nut
          st.write(f"**{k_trl}:** {int(round(count_nutr_cont_all[k],0))} г")
      st.write(f"****") 
      show_nutr_content(count_nutr_cont_all,nutrients_transl, kkal_sel, age_type_categ, weight_sel, select_reproductive_status)   
-     show_figures_ingr_nutr(ingredient_names,ingr_ranges,nutr_ranges,totals,nutrients_transl)
+     show_figures_ingr_nutr(ingredient_names,ingr_ranges,nutr_ranges,totals,nutrients_transl,values)
 
                                     
                                     
