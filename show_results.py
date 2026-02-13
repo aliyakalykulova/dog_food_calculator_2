@@ -99,7 +99,7 @@ def show_resuts_success_2(best_recipe,main_nutrs,metobolic_energy,food,other_nut
      for nutr in main_nutrs:
            nutr_trl=nutrients_transl.loc[nutrients_transl["name_in_database"] == nutr,"name_ru"].iloc[0].split(",")[0]
            st.write(f"**{nutr_trl}:** {int(round(totals[nutr], 0))} г")
-		 en_nutr_100=3.5*totals["protein_per"]+8.5*totals["fats_per"]+3.5*totals["carbohydrate_per"]
+     en_nutr_100=3.5*totals["protein_per"]+8.5*totals["fats_per"]+3.5*totals["carbohydrate_per"]
      st.write(f"**Энергетическая ценность:** {int(round(en_nutr_100,0))} ккал")
      st.markdown(f"### Сколько нужно в граммах корма и ингредиентов на {int(round(metobolic_energy,0))} ккал")           
      needed_feed_g = (metobolic_energy * 100) / en_nutr_100
