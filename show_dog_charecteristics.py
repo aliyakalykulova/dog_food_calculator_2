@@ -1,6 +1,13 @@
 import streamlit as st
 from kcal_calculate import show_sidebar
 
+metrics_age_types=["в годах","в месецах"]
+gender_types=["Самец", "Самка"]
+rep_status_types=["Нет", "Щенность (беременность)", "Период лактации"]
+berem_time_types=["первые 4 недедели беременности","последние 5 недель беременности"]
+lact_time_types=["1 неделя","2 неделя","3 неделя","4 неделя"]
+age_category_types=["puppy","adult","senior"]
+size_types=["small",  "medium",  "large"]
 
 def show_dog_characterictics(disease_df):
     st.set_page_config(page_title="Рекомендации по питанию собак", layout="centered")
