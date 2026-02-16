@@ -21,10 +21,10 @@ def init_global():
 		if "step" not in st.session_state:
 		    st.session_state.step = 0  # 0 — начальное, 1 — после генерации, 2 — после расчета
 		
-		if "select1" not in st.session_state:
-		    st.session_state.select1 = None
-		if "select2" not in st.session_state:
-		    st.session_state.select2 = None
+		if "user_breed" not in st.session_state:
+		    st.session_state.user_breed = None
+		if "disorder" not in st.session_state:
+		    st.session_state.disorder = None
 		
 		if "prev_ingr_ranges" not in st.session_state:
 		    st.session_state.prev_ingr_ranges = []
