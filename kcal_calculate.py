@@ -543,7 +543,7 @@ def age_type_category(size_categ, age ,age_metric):
           elif age>6*12:   
               return age_category_types[2]
             
-def kcal_calculate(age_type, expected, ):
+def kcal_calculate(age_type, expected):
 	reproductive_status=st.session_state.select_reproductive_status
 	berem_time=st.session_state.show_res_berem_time
 	num_pup=st.session_state.show_res_num_pup
