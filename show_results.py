@@ -16,7 +16,11 @@ from kcal_calculate import protein_need_calc
 
 
 def show_resuts_success(ingredient_names,res,food,main_nutrs,nutrients_transl,metobolic_energy,other_nutrients,major_minerals,vitamins,
-                        kkal_sel, age_type_categ, weight_sel, select_reproductive_status):
+                         age_type_categ):
+         kkal_sel = st.session_state.kkal_sel
+         weight_sel = st.session_state.weight_sel
+         select_reproductive_status = st.session_state.select_reproductive_status
+          
          st.success("✅ Решение найдено!")
          result = {name: round(val * 100, 2) for name, val in zip(ingredient_names, res.x)}
          st.markdown("### 📦 Состав (в граммах на 100 г):")
@@ -89,7 +93,10 @@ def show_figures_ingr_nutr(ingredient_names,ingr_ranges,nutr_ranges,totals,nutri
 
 
 def show_resuts_success_2(best_recipe,main_nutrs,metobolic_energy,food,other_nutrients,major_minerals,vitamins,ingredient_names,
-                          ingr_ranges,nutr_ranges,nutrients_transl, kkal_sel, age_type_categ, weight_sel, select_reproductive_status):
+                          ingr_ranges,nutr_ranges,nutrients_transl, age_type_categ):
+     kkal_sel = st.session_state.kkal_sel
+     weight_sel = st.session_state.weight_sel
+     select_reproductive_status = st.session_state.select_reproductive_status
      values, totals = best_recipe
      st.success("⚙️ Найден состав перебором:")
      st.markdown("### 📦 Состав (в граммах на 100 г):")
