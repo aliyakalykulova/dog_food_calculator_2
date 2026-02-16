@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import textwrap
 import sqlite3
 
+from init_global import init_global
 from kcal_calculate import kcal_calculate
 from kcal_calculate import size_category
 from kcal_calculate import age_type_category
@@ -80,52 +81,9 @@ X_combined_wet = combine_features(X_text_reduced_wet, X_categorical_wet)
 
 ridge_models, scalers = train_nutrient_models(food_df[food_df["food_form"]=="wet food"], X_combined_wet)
 
-# Кнопки и состояния -----------------------------------------------------------------------------------
-# 1 этап выбор характеристик для собаки --------------------------------------------------------------
+init_global()
 
-if "show_result_1" not in st.session_state:
-    st.session_state.show_result_1 = False
-if "show_result_2" not in st.session_state:
-    st.session_state.show_result_2 = False
-
-if "select_reproductive_status" not in st.session_state:
-    st.session_state.select_reproductive_status = None
-
-if "select_gender" not in st.session_state:
-    st.session_state.select_gender = None
-if "show_res_berem_time" not in st.session_state:
-                   st.session_state.show_res_berem_time = None
-if "show_res_lact_time" not in st.session_state:
-                   st.session_state.show_res_lact_time = None
-if "show_res_num_pup" not in st.session_state:
-                   st.session_state.show_res_num_pup = None 
-
-if "step" not in st.session_state:
-    st.session_state.step = 0  # 0 — начальное, 1 — после генерации, 2 — после расчета
-
-if "select1" not in st.session_state:
-    st.session_state.select1 = None
-if "select2" not in st.session_state:
-    st.session_state.select2 = None
-
-if "prev_ingr_ranges" not in st.session_state:
-    st.session_state.prev_ingr_ranges = []
-if "prev_nutr_ranges" not in st.session_state:
-    st.session_state.prev_nutr_ranges = {}
-
-if "age_sel" not in st.session_state:
-    st.session_state.age_sel = None
-if "age_metr_sel" not in st.session_state:
-    st.session_state.age_metr_sel = None
-if "weight_sel" not in st.session_state:
-    st.session_state.weight_sel = None
-if "activity_level_sel" not in st.session_state:
-    st.session_state.activity_level_sel = None
-if "kkal_sel" not in st.session_state:
-    st.session_state.kkal_sel = None
-	
 user_breed, breed_size, avg_wight, age_type_categ = show_dog_characterictics(disease_df)
-
 
 #--------------------------------------------------------------------------------------------
 # 2 этап настройка условий рецепта  ---------------------------------------------------------
@@ -138,9 +96,9 @@ if user_breed:
         match = info.loc[info["name_disease"] == selected_disorder, "name_disorder"]
         disorder_type = match.iloc[0] if not match.empty else selected_disorder
 
-        if user_breed != st.session_state.select1 or selected_disorder!= st.session_state.select2:
-            st.session_state.select1 = user_breed
-            st.session_state.select2 = selected_disorder
+        if user_breed != st.session_state.user_breed or selected_disorder!= st.session_state.disorder:
+            st.session_state.user_breed = user_breed
+            st.session_state.disorder = selected_disorder
             st.session_state.show_result_1 = False
             st.session_state.show_result_2 = False
             
@@ -148,8 +106,7 @@ if user_breed:
         if st.button("Составить рекомендации"):
             st.session_state.show_result_1 = True
         if st.session_state.show_result_1:
-            kcal =kcal_calculate(st.session_state.select_reproductive_status, st.session_state.show_res_berem_time, st.session_state.show_res_num_pup ,  st.session_state.show_res_lact_time, 
-                                age_type_categ, st.session_state.weight_sel, avg_wight,  st.session_state.activity_level_sel, user_breed, st.session_state.age_sel)
+            kcal =kcal_calculate( age_type_categ, avg_wight)
             metobolic_energy = st.number_input("Киллокаллории в день", min_value=0.0, step=0.1,  value=round(kcal,1) )
 			
             if st.session_state.kkal_sel!=metobolic_energy:
