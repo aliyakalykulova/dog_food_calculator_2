@@ -279,7 +279,12 @@ def get_conditions_for_function(food_df, func_name, breed_size, lifestage):
 
 
 
-def protein_need_calc(kkal, age_type_categ,  w, reproductive_status, age, age_mesuare_type):
+def protein_need_calc( age_type_categ):
+   kkal=st.session_state.kkal_sel
+   w = st.session_state.weight_sel
+   reproductive_status= st.session_state.select_reproductive_status
+   age = st.session_state.age_sel
+   age_mesuare_type = st.session_state.age_metr_sel
    protein_n=0
    if age_type_categ==age_category_types[0]:
          protein_n = 56.3 * kkal / 1000 if (age_mesuare_type == metrics_age_types[1] and age <= 3) else 43.8 * kkal / 1000
