@@ -227,7 +227,7 @@ if user_breed:
                           nutr_ranges = {}
                           maximaze_nutrs = get_conditions_for_function(food_df, disorder_type, breed_size, age_type_categ)
 						  
-                          needeble_proterin = protein_need_calc(st.session_state.kkal_sel, age_type_categ,  st.session_state.weight_sel, st.session_state.select_reproductive_status, st.session_state.age_sel , st.session_state.age_metr_sel)					  
+                          needeble_proterin = protein_need_calc( age_type_categ)					  
                           nutr_ranges['moisture_per'] = st.slider(f"{'Влага'}", 0, 100, (int(nutrient_preds["moisture"]-5), int(nutrient_preds["moisture"]+5)))
                           nutr_ranges['protein_per'] = st.slider(f"{'Белки'}", 0, 100, (int(nutrient_preds["protein"]-3), int(nutrient_preds["protein"]+3)))
                           nutr_ranges['carbohydrate_per'] = st.slider(f"{'Углеводы'}", 0, 100, (int(nutrient_preds["carbohydrate"]-2), int(nutrient_preds["carbohydrate"]+2)))
@@ -286,12 +286,12 @@ if user_breed:
 
                               if res.success:
                                    show_resuts_success(ingredient_names,res,food,main_nutrs,nutrients_transl,metobolic_energy,other_nutrients,major_minerals,vitamins,
-                                   st.session_state.kkal_sel, age_type_categ, st.session_state.weight_sel, st.session_state.select_reproductive_status)                            
+                                    age_type_categ)                            
                               else:
                                   best_recipe=calc_recipe(ingr_ranges,ingredient_names,main_nutrs,food,nutr_ranges)
                                   if best_recipe:
                                            show_resuts_success_2(best_recipe,main_nutrs,metobolic_energy,food,other_nutrients,major_minerals,vitamins,ingredient_names,
-                                                           ingr_ranges,nutr_ranges,nutrients_transl, st.session_state.kkal_sel, age_type_categ, st.session_state.weight_sel,st.session_state.select_reproductive_status)
+                                                           ingr_ranges,nutr_ranges,nutrients_transl, age_type_categ)
                                   else:
                                      st.error("🚫 Не удалось найти подходящий состав даже вручную.")
                       else:
