@@ -117,8 +117,9 @@ if user_breed:
             ingredients_finish,keywords=ingredient_recomendation(ingredient_models,breed_size, age_type_categ,disorder_type, selected_disorder,vectorizer,svd,encoder, df_standart)
             nutrient_preds = nutrients_recomendation(vectorizer_wet,keywords,svd_wet,encoder_wet, breed_size, age_type_categ, ridge_models,scalers )
   
-            if len(ingredients_finish)>0:               
-
+            if len(ingredients_finish)>0: 
+				     parametrs_for_liniar_programing()
+                      
                       for col in main_nutrs+other_nutrients+major_minerals+vitamins:
                         if col !='ЭПК (50-60%) + ДГК (40-50%), г':
                           ingredirents_df[col] = ingredirents_df[col].astype(str).str.replace(',', '.', regex=False)
@@ -142,7 +143,7 @@ if user_breed:
                           st.session_state.selected_ingredients = set(ingredients_finish)
 
                       st.title("🍲 Выбор ингредиентов")
-                      for category in ingredirents_df['category_ru'].dropna().unique():
+                      for category in ['category_ru'].dropna().unique():
                           with st.expander(f"{category}"):
                               df_cat = ingredirents_df[ingredirents_df['category_ru'] == category]
                               for ingredient in df_cat['name_ingredient_ru'].dropna().unique():
